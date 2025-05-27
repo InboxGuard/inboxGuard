@@ -6,9 +6,10 @@ from email.header import decode_header
 from datetime import datetime
 import json
 
-# 1. Load .env
+# 1. Load .env from parent directory (InboxGuard)
 env = {}
-with open(".env") as f:
+env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
+with open(env_path, encoding='utf-8') as f:
     for line in f:
         if "=" in line and not line.startswith("#"):
             k, v = line.strip().split("=", 1)
@@ -38,11 +39,11 @@ def decode_mime(s):
         return ""
     decoded = decode_header(s)
     result = ""
-    for part, enc in decoded:
-        if isinstance(part, bytes):
-            result += part.decode(enc or "utf-8", errors="replace")
+    for decoded_part, enc in decoded:
+        if isinstance(decoded_part, bytes):
+            result += decoded_part.decode(enc or "utf-8", errors="replace")
         else:
-            result += part
+            result += decoded_part
     return result
 
 for i in range(1, total + 1):
@@ -60,13 +61,13 @@ for i in range(1, total + 1):
                 charset = part.get_content_charset() or "utf-8"
                 try:
                     body = part.get_payload(decode=True).decode(charset, errors="replace")
-                except:
+                except (UnicodeDecodeError, AttributeError):
                     pass
                 break
     else:
         try:
             body = msg.get_payload(decode=True).decode(msg.get_content_charset() or "utf-8", errors="replace")
-        except:
+        except (UnicodeDecodeError, AttributeError):
             pass
 
     emails.append({
@@ -77,7 +78,7 @@ for i in range(1, total + 1):
     })
 
 # 4. Save to JSON
-with open(json_file, "w") as f:
+with open(json_file, "w", encoding='utf-8') as f:
     json.dump(emails, f, ensure_ascii=False, indent=2)
 
 print(f"✅ Saved {len(emails)} emails to {json_file}")

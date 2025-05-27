@@ -10,7 +10,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Create models directory (models already exist)
-RUN mkdir -p ai/train_model/models
+RUN mkdir -p model-service/ai/train_model/models
 
 # Expose the port that FastAPI will run on
 EXPOSE 8000
