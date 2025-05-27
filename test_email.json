@@ -1,0 +1,6 @@
+{
+  "id": "test-002",
+  "sender": "security@bankof-america.xyz",
+  "subject": "URGENT: Your account has been suspended",
+  "body": "Dear customer, suspicious activity has been detected on your account. Click here immediately to verify your identity: http://fake-bank-verify.com/login"
+}
