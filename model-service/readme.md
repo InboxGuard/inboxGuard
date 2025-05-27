@@ -1,18 +1,41 @@
-# Phishing Email Detection API
+# Model Service - Phishing Email Detection API
 
-A FastAPI application that detects phishing emails using machine learning.
+The Model Service is a FastAPI-based microservice that provides machine learning capabilities for detecting phishing emails in the InboxGuard system.
 
-## Project Structure
+## 🎯 Overview
+
+This service implements a trained machine learning model that analyzes email content (subject and body) to classify emails as:
+
+- **Legitimate** (0): Safe emails
+- **Phishing** (1): Malicious emails attempting to steal information
+- **Suspicious** (-1): Uncertain classification (low confidence)
+
+## 🏗️ Architecture
+
+The service uses:
+
+- **FastAPI** for the REST API framework
+- **Scikit-learn** for machine learning models
+- **TF-IDF Vectorization** for text feature extraction
+- **Joblib** for model persistence
+
+## 📁 Project Structure
 
 ```
-phishing-detector/
-├── main.py              # FastAPI application
-├── train_model.py       # Script to train or download the model
-├── Dockerfile           # Docker configuration
-├── requirements.txt     # Python dependencies
-├── models/              # Directory for storing ML models
-│   ├── phishing_model.pkl      # Saved model (created during setup)
-│   └── tfidf_vectorizer.pkl    # Saved vectorizer (created during setup)
+model-service/
+├── main.py                    # FastAPI application and endpoints
+├── requirements.txt           # Python dependencies
+├── README.md                 # This file
+├── sample_email.json         # Sample phishing email data
+├── sample_ai.json           # Sample email data for testing
+└── ai/
+    └── train_model/
+        ├── emails_dataset.csv      # Training dataset
+        ├── generate_dataset.ipynb  # Dataset generation notebook
+        ├── train_model.ipynb      # Model training notebook
+        └── models/
+            ├── phishing_model.pkl      # Trained ML model
+            └── tfidf_vectorizer.pkl    # TF-IDF vectorizer
 ```
 
 ## Setup Instructions

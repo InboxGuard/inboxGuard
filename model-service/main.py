@@ -10,8 +10,8 @@ import os
 app = FastAPI(title="Phishing Email Detector API")
 
 # Path where the model and vectorizer will be stored
-MODEL_PATH = "ai/train_model/models/phishing_model.pkl"
-VECTORIZER_PATH = "ai/train_model/models/tfidf_vectorizer.pkl"
+MODEL_PATH = "model-service/ai/train_model/models/phishing_model.pkl"
+VECTORIZER_PATH = "model-service/ai/train_model/models/tfidf_vectorizer.pkl"
 
 # Load the model and vectorizer
 @app.on_event("startup")
