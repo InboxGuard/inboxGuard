@@ -1,0 +1,38 @@
+[
+  {
+    "id": "1",
+    "sender": "security@paypal.com",
+    "subject": "Urgent: Verify your account now",
+    "body": "Your account has been compromised. Click the link to reset your password immediately."
+  },
+  {
+    "id": "2",
+    "sender": "admin@bank-security.com",
+    "subject": "Important: Update your payment information",
+    "body": "Please update your payment details to avoid service interruption. Click here."
+  },
+  {
+    "id": "3",
+    "sender": "newsletter@trustednews.com",
+    "subject": "Your daily news update",
+    "body": "Here are today's top stories from around the world. Have a great day!"
+  },
+  {
+    "id": "4",
+    "sender": "friend@example.com",
+    "subject": "Lunch tomorrow?",
+    "body": "Hey! Are you free for lunch tomorrow at our usual place?"
+  },
+  {
+    "id": "5",
+    "sender": "unknown@random.com",
+    "subject": "",
+    "body": ""
+  },
+  {
+    "id": "6",
+    "sender": "info@maybelegit.com",
+    "subject": "Hello",
+    "body": "Hi"
+  }
+]

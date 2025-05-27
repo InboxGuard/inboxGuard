@@ -1,0 +1,80 @@
+[
+  {
+    "id": "1",
+    "sender": "security@faceb00k-account-verify.com",
+    "subject": "URGENT: Account Suspended - Immediate Action Required",
+    "body": "Dear Customer, We have detected suspicious activity on your account. Your account has been SUSPENDED. To restore access, click here: http://faceb00k-secure-login.xyz/verify?user=12345 and enter your username and password. Failure to verify within 24 hours will result in permanent account deletion."
+  },
+  {
+    "id": "2",
+    "sender": "support@paypall.com",
+    "subject": "Your PayPal Account Has Been Limited",
+    "body": "We noticed unusual activity in your PayPal account. Please login at http://secure-paypall.com to restore access. If you do not respond within 48 hours, your account will be permanently locked."
+  },
+  {
+    "id": "3",
+    "sender": "it-admin@company-reset.com",
+    "subject": "Password Expiry Notification",
+    "body": "Your password expires today. Reset it now at http://company-reset.com to avoid losing access to your account."
+  },
+  {
+    "id": "4",
+    "sender": "billing@amaz0n-billing.com",
+    "subject": "Amazon Payment Failure",
+    "body": "Your recent payment could not be processed. Update your billing information at http://amaz0n-billing.com to avoid interruption of your Prime membership."
+  },
+  {
+    "id": "5",
+    "sender": "alerts@bank-secure.com",
+    "subject": "Bank Account Locked",
+    "body": "We have locked your bank account due to suspicious activity. Please verify your identity at http://bank-secure.com/verify to regain access."
+  },
+  {
+    "id": "6",
+    "sender": "Mohamed Elanâami <elanaamimohamed@gmail.com>",
+    "subject": "Test2",
+    "body": "Bonsoir 2"
+  },
+  {
+    "id": "7",
+    "sender": "Mohamed Elanaami <itselanaami@gmail.com>",
+    "subject": "Test 3",
+    "body": "Bonsoir 3\r\nLorem bshshsjahaja"
+  },
+  {
+    "id": "8",
+    "sender": "Mohamed Elanaami <itselanaami@gmail.com>",
+    "subject": "Testttt",
+    "body": "BsnsvshaksbshsusbBsnsvshaksbshsusbBsnsvshaksbshsusbBsnsvshaksbshsusbBsnsvshaksbshsusbBsnsvshaksbshsusbBsnsvshaksbshsusbBsnsvshaksbshsusbBsnsvshaksbshsusbBsnsvshaksbshsusbBsnsvshaksbshsusbBsnsvshaksbshsusbBsnsvshaksbshsusbBsnsvshaksbshsusbBsnsvshaksbshsusb"
+  },
+  {
+    "id": "9",
+    "subject": "Your account has been suspended",
+    "body": "Dear user, we detected suspicious activity on your account. To prevent unauthorized access, your account has been temporarily suspended. Please click on the following link to verify your identity and restore your account: http://malicious-website.com/verify?user=12345",
+    "sender": "security@fakeemail.com"
+  },
+  {
+    "id": "10",
+    "subject": "Team Meeting Tomorrow",
+    "body": "Hi everyone, just a reminder that we have our weekly team meeting tomorrow at 10 AM in Conference Room B. Please come prepared with your project updates. Thanks!",
+    "sender": "manager@company.com"
+  },
+  {
+    "id": "11",
+    "subject": "URGENT: Netflix Account Verification Required",
+    "body": "Dear Valued Customer, We detected unusual login activity on your Netflix account. To secure your account and prevent unauthorized charges, please verify your payment information at: http://netflix-accounts-verify.com/login",
+    "sender": "security@netflix-support.net"
+  },
+  {
+    "id": "12",
+    "subject": "Your Invoice #12345",
+    "body": "Thank you for your recent purchase. Please find attached your invoice #12345. If you have any questions about your order, please contact our customer service department.",
+    "sender": "billing@legitcompany.com"
+  },
+  {
+    "id": "13",
+    "subject": "Problem with your payment",
+    "body": "We could not process your payment. Click here to update your payment information immediately: http://paypal-accounts-verify.xyz/login. Your account will be suspended if payment information is not updated within 24 hours.",
+    "sender": "support@paypal-accounts.xyz"
+  }
+]
