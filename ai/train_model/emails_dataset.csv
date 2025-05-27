@@ -1,0 +1,101 @@
+id,sender,subject,body,label
+1,newsletter@trustednews.com,Weekend plans,The quarterly report is ready for review. Please check your email for the attachment.,0
+2,friend@example.com,Project update,Don't forget about the team meeting at 3 PM today in conference room A.,0
+3,security@paypal.com,Account locked,Your Apple ID has been locked. Click to unlock.,1
+4,security@paypal.com,Important: Update your payment information,Please update your payment details to avoid service interruption. Click here.,1
+5,mom@family.com,Project update,Here are today's top stories from around the world. Have a great day!,0
+6,mom@family.com,Meeting reminder,"Hi honey, what are your plans for this weekend? Love you!",0
+7,hr@company.com,Weekend plans,Here are today's top stories from around the world. Have a great day!,0
+8,admin@bank-security.com,Urgent: Verify your account now,We need to verify your identity. Click here to confirm your account details.,1
+9,alert@microsoft-security.org,Your order has been cancelled,Someone tried to access your account. Verify now.,1
+10,mom@family.com,Weekend plans,Here are today's top stories from around the world. Have a great day!,0
+11,hr@company.com,Lunch tomorrow?,Don't forget about the team meeting at 3 PM today in conference room A.,0
+12,friend@example.com,Weekend plans,Hey! Are you free for lunch tomorrow at our usual place?,0
+13,noreply@amazon-security.net,Account locked,Your account has been compromised. Click the link to reset your password immediately.,1
+14,mom@family.com,Weekend plans,Hey! Are you free for lunch tomorrow at our usual place?,0
+15,mom@family.com,Your daily news update,"Hi honey, what are your plans for this weekend? Love you!",0
+16,colleague@work.com,Your daily news update,The quarterly report is ready for review. Please check your email for the attachment.,0
+17,support@apple-id.net,Account locked,We need to verify your identity. Click here to confirm your account details.,1
+18,mom@family.com,Project update,The quarterly report is ready for review. Please check your email for the attachment.,0
+19,security@paypal.com,Your order has been cancelled,Your Apple ID has been locked. Click to unlock.,1
+20,security@paypal.com,Your order has been cancelled,Please update your payment details to avoid service interruption. Click here.,1
+21,noreply@amazon-security.net,Account locked,Please update your payment details to avoid service interruption. Click here.,1
+22,newsletter@trustednews.com,Project update,The quarterly report is ready for review. Please check your email for the attachment.,0
+23,friend@example.com,Meeting reminder,The quarterly report is ready for review. Please check your email for the attachment.,0
+24,newsletter@trustednews.com,Project update,Here are today's top stories from around the world. Have a great day!,0
+25,friend@example.com,Your daily news update,Hey! Are you free for lunch tomorrow at our usual place?,0
+26,admin@bank-security.com,Suspicious login detected,Your account has been compromised. Click the link to reset your password immediately.,1
+27,mom@family.com,Your daily news update,Hey! Are you free for lunch tomorrow at our usual place?,0
+28,colleague@work.com,Your daily news update,Here are today's top stories from around the world. Have a great day!,0
+29,mom@family.com,Lunch tomorrow?,Here are today's top stories from around the world. Have a great day!,0
+30,colleague@work.com,Your daily news update,Don't forget about the team meeting at 3 PM today in conference room A.,0
+31,newsletter@trustednews.com,Weekend plans,The quarterly report is ready for review. Please check your email for the attachment.,0
+32,friend@example.com,Weekend plans,Hey! Are you free for lunch tomorrow at our usual place?,0
+33,newsletter@trustednews.com,Weekend plans,Don't forget about the team meeting at 3 PM today in conference room A.,0
+34,friend@example.com,Weekend plans,Here are today's top stories from around the world. Have a great day!,0
+35,newsletter@trustednews.com,Meeting reminder,Don't forget about the team meeting at 3 PM today in conference room A.,0
+36,security@paypal.com,Important: Update your payment information,Someone tried to access your account. Verify now.,1
+37,support@apple-id.net,Urgent: Verify your account now,Someone tried to access your account. Verify now.,1
+38,newsletter@trustednews.com,Meeting reminder,Don't forget about the team meeting at 3 PM today in conference room A.,0
+39,newsletter@trustednews.com,Weekend plans,Don't forget about the team meeting at 3 PM today in conference room A.,0
+40,support@apple-id.net,Your order has been cancelled,We need to verify your identity. Click here to confirm your account details.,1
+41,security@paypal.com,Account locked,Your account has been compromised. Click the link to reset your password immediately.,1
+42,support@apple-id.net,Account locked,Please update your payment details to avoid service interruption. Click here.,1
+43,friend@example.com,Your daily news update,Don't forget about the team meeting at 3 PM today in conference room A.,0
+44,noreply@amazon-security.net,Important: Update your payment information,Your account has been compromised. Click the link to reset your password immediately.,1
+45,newsletter@trustednews.com,Lunch tomorrow?,Don't forget about the team meeting at 3 PM today in conference room A.,0
+46,admin@bank-security.com,Account locked,Your Apple ID has been locked. Click to unlock.,1
+47,newsletter@trustednews.com,Meeting reminder,The quarterly report is ready for review. Please check your email for the attachment.,0
+48,mom@family.com,Lunch tomorrow?,Don't forget about the team meeting at 3 PM today in conference room A.,0
+49,mom@family.com,Lunch tomorrow?,"Hi honey, what are your plans for this weekend? Love you!",0
+50,admin@bank-security.com,Urgent: Verify your account now,We need to verify your identity. Click here to confirm your account details.,1
+51,support@apple-id.net,Account locked,Someone tried to access your account. Verify now.,1
+52,mom@family.com,Weekend plans,The quarterly report is ready for review. Please check your email for the attachment.,0
+53,mom@family.com,Your daily news update,"Hi honey, what are your plans for this weekend? Love you!",0
+54,mom@family.com,Meeting reminder,Don't forget about the team meeting at 3 PM today in conference room A.,0
+55,admin@bank-security.com,Urgent: Verify your account now,We need to verify your identity. Click here to confirm your account details.,1
+56,friend@example.com,Your daily news update,Hey! Are you free for lunch tomorrow at our usual place?,0
+57,noreply@amazon-security.net,Your order has been cancelled,Your Apple ID has been locked. Click to unlock.,1
+58,admin@bank-security.com,Account locked,We need to verify your identity. Click here to confirm your account details.,1
+59,alert@microsoft-security.org,Suspicious login detected,Please update your payment details to avoid service interruption. Click here.,1
+60,colleague@work.com,Your daily news update,Hey! Are you free for lunch tomorrow at our usual place?,0
+61,mom@family.com,Project update,"Hi honey, what are your plans for this weekend? Love you!",0
+62,admin@bank-security.com,Suspicious login detected,Your Apple ID has been locked. Click to unlock.,1
+63,security@paypal.com,Your order has been cancelled,Please update your payment details to avoid service interruption. Click here.,1
+64,mom@family.com,Project update,Here are today's top stories from around the world. Have a great day!,0
+65,colleague@work.com,Lunch tomorrow?,Don't forget about the team meeting at 3 PM today in conference room A.,0
+66,hr@company.com,Meeting reminder,Don't forget about the team meeting at 3 PM today in conference room A.,0
+67,security@paypal.com,Urgent: Verify your account now,Your Apple ID has been locked. Click to unlock.,1
+68,alert@microsoft-security.org,Suspicious login detected,Please update your payment details to avoid service interruption. Click here.,1
+69,friend@example.com,Weekend plans,Hey! Are you free for lunch tomorrow at our usual place?,0
+70,alert@microsoft-security.org,Suspicious login detected,We need to verify your identity. Click here to confirm your account details.,1
+71,mom@family.com,Lunch tomorrow?,The quarterly report is ready for review. Please check your email for the attachment.,0
+72,colleague@work.com,Meeting reminder,Hey! Are you free for lunch tomorrow at our usual place?,0
+73,hr@company.com,Your daily news update,"Hi honey, what are your plans for this weekend? Love you!",0
+74,noreply@amazon-security.net,Urgent: Verify your account now,Someone tried to access your account. Verify now.,1
+75,support@apple-id.net,Important: Update your payment information,Your Apple ID has been locked. Click to unlock.,1
+76,friend@example.com,Your daily news update,Here are today's top stories from around the world. Have a great day!,0
+77,hr@company.com,Meeting reminder,The quarterly report is ready for review. Please check your email for the attachment.,0
+78,alert@microsoft-security.org,Urgent: Verify your account now,Your account has been compromised. Click the link to reset your password immediately.,1
+79,colleague@work.com,Your daily news update,"Hi honey, what are your plans for this weekend? Love you!",0
+80,support@apple-id.net,Suspicious login detected,Your Apple ID has been locked. Click to unlock.,1
+81,support@apple-id.net,Important: Update your payment information,Someone tried to access your account. Verify now.,1
+82,hr@company.com,Meeting reminder,The quarterly report is ready for review. Please check your email for the attachment.,0
+83,noreply@amazon-security.net,Account locked,Someone tried to access your account. Verify now.,1
+84,noreply@amazon-security.net,Suspicious login detected,Please update your payment details to avoid service interruption. Click here.,1
+85,friend@example.com,Project update,"Hi honey, what are your plans for this weekend? Love you!",0
+86,hr@company.com,Weekend plans,Here are today's top stories from around the world. Have a great day!,0
+87,newsletter@trustednews.com,Lunch tomorrow?,"Hi honey, what are your plans for this weekend? Love you!",0
+88,colleague@work.com,Lunch tomorrow?,The quarterly report is ready for review. Please check your email for the attachment.,0
+89,alert@microsoft-security.org,Suspicious login detected,We need to verify your identity. Click here to confirm your account details.,1
+90,security@paypal.com,Important: Update your payment information,Your account has been compromised. Click the link to reset your password immediately.,1
+91,colleague@work.com,Your daily news update,Don't forget about the team meeting at 3 PM today in conference room A.,0
+92,colleague@work.com,Weekend plans,Hey! Are you free for lunch tomorrow at our usual place?,0
+93,newsletter@trustednews.com,Project update,Don't forget about the team meeting at 3 PM today in conference room A.,0
+94,noreply@amazon-security.net,Suspicious login detected,Please update your payment details to avoid service interruption. Click here.,1
+95,newsletter@trustednews.com,Project update,The quarterly report is ready for review. Please check your email for the attachment.,0
+96,friend@example.com,Meeting reminder,Here are today's top stories from around the world. Have a great day!,0
+97,security@paypal.com,Urgent: Verify your account now,Your account has been compromised. Click the link to reset your password immediately.,1
+98,friend@example.com,Your daily news update,Don't forget about the team meeting at 3 PM today in conference room A.,0
+99,colleague@work.com,Meeting reminder,Don't forget about the team meeting at 3 PM today in conference room A.,0
+100,admin@bank-security.com,Account locked,Your Apple ID has been locked. Click to unlock.,1
