@@ -34,3 +34,7 @@ env/
 # Temporary files
 *.tmp
 *.temp
+
+# Saved files
+email-service/extracted_emails
+model-service/responses
