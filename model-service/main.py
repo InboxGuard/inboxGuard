@@ -231,7 +231,7 @@ def trigger_send_latest_batch():
     # We'll capture the loaded emails
     loaded_emails = {}
 
-    def send_latest_batch_to_endpoint_with_return(base_dir="/Users/admin/Projects/enset/InboxGuard/email-service/"):
+    def send_latest_batch_to_endpoint_with_return(base_dir="../email-service/"):
         folders = [f for f in os.listdir(base_dir) if os.path.isdir(os.path.join(base_dir, f))]
         folders = [f for f in folders if len(f) == 13 and f[4] == '-' and f[7] == '-' and f[10] == '_']
         if not folders:
