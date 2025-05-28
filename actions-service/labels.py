@@ -1,11 +1,12 @@
 import imaplib
 import email
+import os  # Add missing import
 from email.header import decode_header
 
-def connect_to_gmail(username, password):
+def connect_to_gmail(EMAIL, password):
     """Connect to Gmail IMAP server"""
     mail = imaplib.IMAP4_SSL('imap.gmail.com')
-    mail.login(username, password)
+    mail.login(EMAIL, password)
     return mail
 
 def label_exists(mail, label_name):
@@ -47,11 +48,23 @@ def ensure_label_exists(mail, label_name):
     return True
 
 def main():
+    # 1. Load .env from parent directory (InboxGuard)
+    env = {}
+    env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
+    with open(env_path, encoding='utf-8') as f:
+        for line in f:
+            if "=" in line and not line.startswith("#"):
+                k, v = line.strip().split("=", 1)
+                env[k] = v
     # Replace with your credentials
-    USERNAME = 'medtest26@gmail.com'
-    PASSWORD = 'snvs efgi wlwi ihfo'  # Use app password if 2FA enabled
+    EMAIL = env.get("GMAIL_ADDRESS")
+    PASSWORD = env.get("GMAIL_PASSWORD")
+
+    if not EMAIL or not PASSWORD:
+        print("Missing credentials in .env")
+        return
     
-    mail = connect_to_gmail(USERNAME, PASSWORD)
+    mail = connect_to_gmail(EMAIL, PASSWORD)
     
     try:
         # Labels you want to ensure exist
