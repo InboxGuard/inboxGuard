@@ -30,14 +30,14 @@ async def load_model():
 
 
 class EmailInput(BaseModel):
-    id: str
+    uid: str
     sender: str
     subject: str
     body: str
 
 
 class PredictionResult(BaseModel):
-    id: str
+    uid: str
     prediction: int
     confidence: float
     message: str
@@ -71,7 +71,7 @@ def analyze_email(email_data: Dict, email_id: Optional[str] = None) -> Predictio
     email_text = extract_email_text(email_data)
     if not email_text:
         return PredictionResult(
-            id=email_id or email_data.get("id", ""),
+            uid=email_id or email_data.get("uid", ""),
             prediction=0,  # Suspicious now returns 0
             confidence=0.0,
             message="Empty email content",
@@ -93,7 +93,7 @@ def analyze_email(email_data: Dict, email_id: Optional[str] = None) -> Predictio
         "sender": email_data.get("sender", "")
     }
     return PredictionResult(
-        id=email_id or email_data.get("id", ""),
+        uid=email_id or email_data.get("uid", ""),
         prediction=final_prediction,
         confidence=confidence,
         message=message,
@@ -197,7 +197,7 @@ async def detect_phishing_batch(emails: List[EmailInput]):
     Batch endpoint for analyzing multiple emails at once via JSON body
     """
     try:
-        # Process each email - use the email's own ID instead of generating one
+        # Process each email - use the email's own UID instead of generating one
         results = [analyze_email(email.dict()) for email in emails]
         
         # Generate summary statistics
