@@ -38,3 +38,4 @@ env/
 # Saved files
 email-service/extracted_emails
 model-service/responses
+actions-service/logs
