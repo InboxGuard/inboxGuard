@@ -73,38 +73,26 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### Step 3: Run the Pipeline
-
-```bash
-./inboxguard.sh -e email@gmail.com -p "your_app_password"
-```
-
-### Step 4: Run the Model Service (Optional)
+### Step 3: Run the Model Service
 
 If you want to run the model service separately, you can use Docker:
 
 ```bash
-docker build -t inboxguard-model-service .
-docker run -d -p 8000:8000 --name inboxguard-model-service inboxguard-model-service
+python3 model-service/main.py
 ```
 
-### Step 5: Access the Model Service
+### Step 5: Make the Pipeline Script Executable
 
-You can access the model service at `http://localhost:8000/docs` to see the API documentation and test the endpoints.
-
-### Step 6: Configure Environment Variables
-
-Create a `.env` file in the root directory with the following content:
-
-```plaintext
-GMAIL_EMAIL=email@gmail.com
-GMAIL_APP_PASSWORD=your_app_password
-```
-
-### Step 7: Run the Pipeline Script
+Ensure the inboxguard.sh script is executable by running:
 
 ```bash
-python start.py
+chmod +x inboxguard.sh
+```
+
+### Step 6: Run the Pipeline Script
+
+```bash
+./inboxguard.sh -e email@gmail.com -p "your_app_password"
 ```
 
 ## 🛠️ How It Works
