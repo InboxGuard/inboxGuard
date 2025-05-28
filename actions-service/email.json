@@ -1,0 +1,22 @@
+{
+  "3": {
+    "id": "3",
+    "prediction": -1,
+    "confidence": 0.6592588094722883,
+    "message": "Suspicious email - uncertain classification",
+    "input_source": {
+      "subject": "Urgent: Verify your account now",
+      "sender": "Mohamed Elanâami <elanaamimohamed@gmail.com>"
+    }
+  },
+  "1": {
+    "id": "1",
+    "prediction": 1,
+    "confidence": 0.8422383327967072,
+    "message": "Phishing email detected",
+    "input_source": {
+      "subject": "URGENT: Account Suspended - Immediate Action Required",
+      "sender": "Mohamed Elanâami <elanaamimohamed@gmail.com>"
+    }
+  }
+}
