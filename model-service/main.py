@@ -220,16 +220,11 @@ async def detect_phishing_batch(emails: List[EmailInput]):
         raise HTTPException(status_code=500, detail=f"Batch prediction error: {str(e)}")
 
 
-@app.get("/health")
-def health_check():
-    """Health check endpoint"""
-    return {"status": "healthy"}
 
 
 @app.post("/send-latest-batch")
-def trigger_send_latest_batch():
-    # We'll capture the loaded emails
-    loaded_emails = {}
+async def trigger_send_latest_batch():
+    import pathlib
 
     def send_latest_batch_to_endpoint_with_return(base_dir="../email-service/"):
         folders = [f for f in os.listdir(base_dir) if os.path.isdir(os.path.join(base_dir, f))]
@@ -246,21 +241,32 @@ def trigger_send_latest_batch():
         json_path = os.path.join(folder_path, json_files[0])
         with open(json_path, "r") as f:
             emails = json.load(f)
-        # Send to the batch endpoint
-        url = "http://localhost:8000/detect-phishing-batch"
-        response = requests.post(url, json=emails)
-        print("Status code:", response.status_code)
-        print("Response:", response.json())
+        print("Loaded emails:", emails)
         return emails
 
-    loaded_emails = send_latest_batch_to_endpoint_with_return()
+    loaded_emails = send_latest_batch_to_endpoint_with_return(
+        base_dir="/Users/admin/Projects/enset/InboxGuard/email-service"
+    )
+    if not loaded_emails:
+        return {
+            "status": "No batch sent",
+            "loaded_json": None
+        }
+    # Convert loaded_emails to list of EmailInput if needed
+    email_inputs = [EmailInput(**email) for email in loaded_emails]
+    # Call the batch prediction endpoint directly
+    batch_result = await detect_phishing_batch(email_inputs)
     return {
         "status": "Batch sent",
-        "loaded_json": loaded_emails
+        "loaded_json": loaded_emails,
+        "batch_result": batch_result
     }
 
-# Example usage (uncomment to run directly)
-# send_latest_batch_to_endpoint()
+@app.get("/health")
+def health_check():
+    """Health check endpoint"""
+    return {"status": "healthy"}
+
 
 if __name__ == "__main__":
     import uvicorn
