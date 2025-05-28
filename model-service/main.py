@@ -110,115 +110,114 @@ def save_batch_response(response_obj, prefix="batch_response"):
         json.dump(response_obj, f, indent=2, default=str)
 
 
-@app.post("/detect-phishing-upload-file", response_model=Union[SinglePredictionResponse, BatchPredictionResponse])
-async def detect_phishing_upload_file(file: UploadFile = File(...)):
-    """
-    Detect phishing emails from uploaded JSON file (single email or multiple emails)
+# @app.post("/detect-phishing-upload-file", response_model=Union[SinglePredictionResponse, BatchPredictionResponse])
+# async def detect_phishing_upload_file(file: UploadFile = File(...)):
+#     """
+#     Detect phishing emails from uploaded JSON file (single email or multiple emails)
 
-    The JSON can be:
-    1. A single email object
-    2. An array of email objects
-    3. A nested structure with emails under properties
+#     The JSON can be:
+#     1. A single email object
+#     2. An array of email objects
+#     3. A nested structure with emails under properties
     
-    Returns:
-    - prediction: 1 (Phishing), 0 (Not Phishing), -1 (Suspicious/Uncertain)
-    """
-    try:
-        # Read and parse the uploaded JSON file
-        content = await file.read()
-        data = json.loads(content)
+#     Returns:
+#     - prediction: 1 (Phishing), 0 (Not Phishing), -1 (Suspicious/Uncertain)
+#     """
+#     try:
+#         # Read and parse the uploaded JSON file
+#         content = await file.read()
+#         data = json.loads(content)
         
-        # Check if we have a single email or multiple emails
-        if isinstance(data, list):
-            # Process list of emails
-            results = [analyze_email(email) for email in data]
+#         # Check if we have a single email or multiple emails
+#         if isinstance(data, list):
+#             # Process list of emails
+#             results = [analyze_email(email) for email in data]
             
-            # Generate summary statistics
-            summary = {
-                "total": len(results),
-                "phishing": sum(1 for r in results if r.prediction == 1),
-                "legitimate": sum(1 for r in results if r.prediction == 0),
-                "suspicious": sum(1 for r in results if r.prediction == -1)
-            }
+#             # Generate summary statistics
+#             summary = {
+#                 "total": len(results),
+#                 "phishing": sum(1 for r in results if r.prediction == 1),
+#                 "legitimate": sum(1 for r in results if r.prediction == 0),
+#                 "suspicious": sum(1 for r in results if r.prediction == -1)
+#             }
             
-            batch_response = BatchPredictionResponse(
-                status="success",
-                results=results,
-                summary=summary
-            )
-            # Save the response
-            save_batch_response(batch_response.dict())
-            return batch_response
+#             batch_response = BatchPredictionResponse(
+#                 status="success",
+#                 results=results,
+#                 summary=summary
+#             )
+#             # Save the response
+#             save_batch_response(batch_response.dict())
+#             return batch_response
             
-        elif isinstance(data, dict):
-            # Check if this is a single email or a container with multiple emails
-            if "emails" in data and isinstance(data["emails"], list):
-                # Container with list of emails
-                results = [analyze_email(email) for email in data["emails"]]
+#         elif isinstance(data, dict):
+#             # Check if this is a single email or a container with multiple emails
+#             if "emails" in data and isinstance(data["emails"], list):
+#                 # Container with list of emails
+#                 results = [analyze_email(email) for email in data["emails"]]
                 
-                # Generate summary statistics
-                summary = {
-                    "total": len(results),
-                    "phishing": sum(1 for r in results if r.prediction == 1),
-                    "legitimate": sum(1 for r in results if r.prediction == 0),
-                    "suspicious": sum(1 for r in results if r.prediction == -1)
-                }
+#                 # Generate summary statistics
+#                 summary = {
+#                     "total": len(results),
+#                     "phishing": sum(1 for r in results if r.prediction == 1),
+#                     "legitimate": sum(1 for r in results if r.prediction == 0),
+#                     "suspicious": sum(1 for r in results if r.prediction == -1)
+#                 }
                 
-                batch_response = BatchPredictionResponse(
-                    status="success",
-                    results=results,
-                    summary=summary
-                )
-                save_batch_response(batch_response.dict())
-                return batch_response
+#                 batch_response = BatchPredictionResponse(
+#                     status="success",
+#                     results=results,
+#                     summary=summary
+#                 )
+#                 save_batch_response(batch_response.dict())
+#                 return batch_response
                 
-            else:
-                # Single email object
-                result = analyze_email(data)
-                return SinglePredictionResponse(
-                    status="success",
-                    result=result
-                )
-        else:
-            raise HTTPException(
-                status_code=400, 
-                detail="Invalid JSON format. Expected a single object or an array of objects."
-            )
+#             else:
+#                 # Single email object
+#                 result = analyze_email(data)
+#                 return SinglePredictionResponse(
+#                     status="success",
+#                     result=result
+#                 )
+#         else:
+#             raise HTTPException(
+#                 status_code=400, 
+#                 detail="Invalid JSON format. Expected a single object or an array of objects."
+#             )
             
-    except json.JSONDecodeError:
-        raise HTTPException(status_code=400, detail="Invalid JSON format")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
+#     except json.JSONDecodeError:
+#         raise HTTPException(status_code=400, detail="Invalid JSON format")
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
 
 
-@app.post("/detect-phishing-batch", response_model=BatchPredictionResponse)
-async def detect_phishing_batch(emails: List[EmailInput]):
-    """
-    Batch endpoint for analyzing multiple emails at once via JSON body
-    """
-    try:
-        # Process each email - use the email's own UID instead of generating one
-        results = [analyze_email(email.dict()) for email in emails]
+# @app.post("/detect-phishing-batch", response_model=BatchPredictionResponse)
+# async def detect_phishing_batch(emails: List[EmailInput]):
+#     """
+#     Batch endpoint for analyzing multiple emails at once via JSON body
+#     """
+#     try:
+#         # Process each email - use the email's own UID instead of generating one
+#         results = [analyze_email(email.dict()) for email in emails]
         
-        # Generate summary statistics
-        summary = {
-            "total": len(results),
-            "phishing": sum(1 for r in results if r.prediction == 1),
-            "legitimate": sum(1 for r in results if r.prediction == 0),
-            "suspicious": sum(1 for r in results if r.prediction == -1)
-        }
+#         # Generate summary statistics
+#         summary = {
+#             "total": len(results),
+#             "phishing": sum(1 for r in results if r.prediction == 1),
+#             "legitimate": sum(1 for r in results if r.prediction == 0),
+#             "suspicious": sum(1 for r in results if r.prediction == -1)
+#         }
         
-        batch_response = BatchPredictionResponse(
-            status="success",
-            results=results,
-            summary=summary
-        )
-        save_batch_response(batch_response.dict(), prefix="batch_api_response")
-        return batch_response
+#         batch_response = BatchPredictionResponse(
+#             status="success",
+#             results=results,
+#             summary=summary
+#         )
+#         save_batch_response(batch_response.dict(), prefix="batch_api_response")
+#         return batch_response
         
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Batch prediction error: {str(e)}")
-
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"Batch prediction error: {str(e)}")
 
 
 

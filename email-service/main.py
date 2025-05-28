@@ -23,7 +23,7 @@ if not EMAIL or not PASSWORD:
     print("Missing credentials in .env")
     sys.exit(1)
 
-# 2. Prepare output directory
+# 2. Prepare output directory in email-service folder
 folder = "extracted_emails"
 os.makedirs(folder, exist_ok=True)
 json_file = os.path.join(folder, "emails.json")
@@ -50,7 +50,7 @@ try:
         result = ""
         for decoded_part, enc in decoded:
             if isinstance(decoded_part, bytes):
-                result += decoded_part.decode(enc or "utf-8", errors="replace")
+                result += decoded_part.decode(enc or 'utf-8', errors='ignore')
             else:
                 result += decoded_part
         return result
@@ -60,26 +60,24 @@ try:
         if msg.is_multipart():
             for part in msg.walk():
                 if part.get_content_type() == "text/plain":
-                    payload = part.get_payload(decode=True)
-                    if payload:
-                        body += payload.decode('utf-8', errors='replace')
+                    try:
+                        body += part.get_payload(decode=True).decode('utf-8', errors='ignore')
+                    except:
+                        body += str(part.get_payload())
         else:
-            payload = msg.get_payload(decode=True)
-            if payload:
-                body = payload.decode('utf-8', errors='replace')
+            try:
+                body = msg.get_payload(decode=True).decode('utf-8', errors='ignore')
+            except:
+                body = str(msg.get_payload())
         return body
     
     for mail_id in recent_mail_ids:
-        # Fetch email with UID
-        status, msg_data = mail.fetch(mail_id, '(UID RFC822)')
+        status, msg_data = mail.fetch(mail_id, '(RFC822)')
+        msg = email.message_from_bytes(msg_data[0][1])
         
-        # Extract UID from response
-        uid_response = msg_data[0][0].decode()
-        uid = uid_response.split()[2] if 'UID' in uid_response else mail_id.decode()
-        
-        # Parse email
-        raw_email = msg_data[0][1]
-        msg = email.message_from_bytes(raw_email)
+        # Get UID
+        status, uid_data = mail.fetch(mail_id, '(UID)')
+        uid = uid_data[0].decode().split()[2].rstrip(')')
         
         sender = decode_mime(msg.get("From", ""))
         subject = decode_mime(msg.get("Subject", ""))
@@ -104,6 +102,9 @@ try:
         json.dump(emails, f, indent=2, ensure_ascii=False)
     
     print(f"✅ Saved {len(emails)} emails to {json_file}")
+    
+    # Don't auto-trigger batch processing - let the pipeline handle it
+    print("📧 Email extraction completed successfully")
 
 except imaplib.IMAP4.error as e:
     print(f"IMAP error: {e}")
@@ -111,3 +112,5 @@ except imaplib.IMAP4.error as e:
 except Exception as e:
     print(f"Error: {e}")
     sys.exit(1)
+
+print("🎯 Email service finished")

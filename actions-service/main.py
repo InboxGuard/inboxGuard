@@ -79,83 +79,56 @@ class GmailProcessor:
             latest_file = max(json_files, key=os.path.getmtime)
             logger.info(f"Loading predictions from latest file: {latest_file}")
             
-            with open(latest_file, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            
-            # Log the raw data structure for debugging
-            logger.info(f"Raw JSON data type: {type(data)}")
-            logger.info(f"Raw JSON data: {json.dumps(data, indent=2)[:500]}...")
-            
-            # Convert the data structure to uid -> prediction mapping
             predictions = {}
             
-            # Handle different possible JSON structures
-            if isinstance(data, dict):
-                # Check if it has 'results' key with simple uid/prediction structure
-                if 'results' in data and isinstance(data['results'], list):
-                    logger.info("Processing JSON with 'results' array structure")
-                    for item in data['results']:
-                        if isinstance(item, dict):
-                            # Check for simple uid/prediction structure first
-                            if 'uid' in item and 'prediction' in item:
-                                uid = item['uid']
-                                predictions[uid] = item
-                                logger.info(f"Found simple prediction for UID {uid}: {item}")
+            # Read file line by line since it's JSONL format
+            with open(latest_file, 'r', encoding='utf-8') as f:
+                for line_num, line in enumerate(f, 1):
+                    line = line.strip()
+                    if not line:
+                        continue
+                    
+                    try:
+                        data = json.loads(line)
+                        logger.info(f"Line {line_num}: {data}")
+                        
+                        # Extract custom_id and prediction
+                        if 'custom_id' in data and 'response' in data:
+                            custom_id = data['custom_id']
+                            response = data['response']
                             
-                            # Check for OpenAI batch API structure (custom_id/response)
-                            elif 'custom_id' in item and 'response' in item:
-                                uid = item['custom_id']
-                                response = item.get('response', {})
-                                
-                                # Extract prediction from response body
-                                if 'body' in response and 'choices' in response['body']:
-                                    choices = response['body']['choices']
-                                    if choices and isinstance(choices, list) and len(choices) > 0:
-                                        message_content = choices[0].get('message', {}).get('content', '')
-                                        try:
-                                            # Parse the prediction from the message content
-                                            prediction_data = json.loads(message_content)
-                                            predictions[uid] = prediction_data
-                                            logger.info(f"Parsed OpenAI prediction for UID {uid}: {prediction_data}")
-                                        except json.JSONDecodeError:
-                                            logger.error(f"Failed to parse prediction content for UID {uid}: {message_content}")
-                
-                # Direct UID mapping
-                elif all(isinstance(v, dict) for v in data.values() if v is not None):
-                    logger.info("Processing JSON with direct UID mapping structure")
-                    predictions = data
-                
-                # Wrapped in predictions key
-                elif 'predictions' in data:
-                    logger.info("Processing JSON with 'predictions' wrapper")
-                    predictions = data['predictions']
-                
-                else:
-                    # Try to find any structure that looks like predictions
-                    logger.info("Attempting to parse unknown JSON structure")
-                    for key, value in data.items():
-                        logger.info(f"Key: {key}, Value type: {type(value)}, Value: {str(value)[:100]}")
+                            # Extract UID from custom_id (remove "email_" prefix)
+                            if custom_id.startswith('email_'):
+                                uid = custom_id[6:]  # Remove "email_" prefix
+                            else:
+                                uid = custom_id
+                            
+                            # Extract prediction from response
+                            if 'body' in response and 'choices' in response['body']:
+                                choices = response['body']['choices']
+                                if choices and len(choices) > 0:
+                                    content = choices[0].get('message', {}).get('content', '')
+                                    
+                                    try:
+                                        # Convert string prediction to integer
+                                        prediction_value = int(content.strip().strip('"'))
+                                        
+                                        # Create prediction data structure
+                                        prediction_data = {
+                                            'prediction': prediction_value,
+                                            'confidence': 1.0,  # Default confidence
+                                            'message': f'Prediction from OpenAI: {prediction_value}'
+                                        }
+                                        
+                                        predictions[uid] = prediction_data
+                                        logger.info(f"Processed UID {uid} with prediction {prediction_value}")
+                                        
+                                    except (ValueError, TypeError) as e:
+                                        logger.error(f"Failed to parse prediction value '{content}' for UID {uid}: {e}")
                         
-                        # If value is a list, check if it contains prediction objects
-                        if isinstance(value, list):
-                            for i, item in enumerate(value):
-                                if isinstance(item, dict) and ('prediction' in item or 'custom_id' in item):
-                                    item_id = item.get('custom_id') or item.get('id') or f"{key}_{i}"
-                                    predictions[item_id] = item
-                                    logger.info(f"Found prediction in list for ID {item_id}")
-                        
-                        # If value is a dict with prediction info
-                        elif isinstance(value, dict) and ('prediction' in value or 'custom_id' in value):
-                            predictions[key] = value
-                            logger.info(f"Found prediction for key {key}")
-            
-            elif isinstance(data, list):
-                logger.info("Processing JSON with list structure")
-                for i, item in enumerate(data):
-                    if isinstance(item, dict):
-                        item_id = item.get('id') or item.get('custom_id') or str(i)
-                        predictions[item_id] = item
-                        logger.info(f"Added prediction for ID {item_id}")
+                    except json.JSONDecodeError as e:
+                        logger.error(f"Failed to parse JSON on line {line_num}: {e}")
+                        continue
             
             logger.info(f"Successfully loaded {len(predictions)} email predictions")
             logger.info(f"Prediction UIDs: {list(predictions.keys())}")
@@ -243,28 +216,33 @@ class GmailProcessor:
         Returns:
             bool: True if action successful, False otherwise
         """
+        print(f"Performing action on email UID: {email_uid}")
+        logger.info(f"Performing action on email UID: {email_uid} with prediction: {prediction}")
+        
         try:
             # Select INBOX to ensure we're working with the right mailbox
             self.mail.select('INBOX')
             
             if prediction == 1:
-                # Delete email (move to Trash)
-                self.mail.uid('store', email_uid, '+FLAGS', '\\Deleted')
-                self.mail.expunge()
-                logger.info(f"Deleted email UID {email_uid}")
-                
-            elif prediction == -1:
-                # Move email to "suspicious" label
-                # First, add the suspicious label
-                self.mail.uid('store', email_uid, '+X-GM-LABELS', 'suspicious')
+                # Delete email (move to Trash) - assuming this means phishing
+                self.mail.uid('store', email_uid, '+X-GM-LABELS', 'inboxguard-phishing')
                 # Remove from inbox
                 self.mail.uid('store', email_uid, '-X-GM-LABELS', '\\Inbox')
-                logger.info(f"Moved email UID {email_uid} to suspicious label")
+                logger.info(f"Moved email UID {email_uid} to inboxguard-phishing label")
+                
+            elif prediction == -1:
+                # Move email to "suspicious" sublabel
+                self.mail.uid('store', email_uid, '+X-GM-LABELS', 'inboxguard-suspicious')
+                # Remove from inbox
+                self.mail.uid('store', email_uid, '-X-GM-LABELS', '\\Inbox')
+                logger.info(f"Moved email UID {email_uid} to inboxguard-suspicious label")
                 
             elif prediction == 0:
-                # Do nothing
-                logger.info(f"No action taken for email UID {email_uid}")
-            
+                # Move to safe sublabel (or do nothing - your choice)
+                self.mail.uid('store', email_uid, '+X-GM-LABELS', 'inboxguard-safe')
+                # Remove from inbox
+                self.mail.uid('store', email_uid, '-X-GM-LABELS', '\\Inbox')
+                logger.info(f"Moved email UID {email_uid} to inboxguard-safe label")
             else:
                 logger.warning(f"Unknown prediction value {prediction} for email UID {email_uid}")
                 return False
