@@ -227,12 +227,14 @@ async def trigger_send_latest_batch():
     import pathlib
 
     def send_latest_batch_to_endpoint_with_return(base_dir="../email-service/"):
-        folders = [f for f in os.listdir(base_dir) if os.path.isdir(os.path.join(base_dir, f))]
-        folders = [f for f in folders if len(f) == 13 and f[4] == '-' and f[7] == '-' and f[10] == '_']
-        if not folders:
-            print("No folders found with the expected pattern.")
-            return None
-        latest_folder = sorted(folders)[-1]
+        # folders = [f for f in os.listdir(base_dir) if os.path.isdir(os.path.join(base_dir, f))]
+        # folders = [f for f in folders if len(f) == 13 and f[4] == '-' and f[7] == '-' and f[10] == '_']
+        # if not folders:
+        #     print("No folders found with the expected pattern.")
+        #     return None
+        # Sort folders by date (assuming folder names are in the format YYYY-MM-DD_HHMMSS)
+        # latest_folder = sorted(folders)[-1]
+        latest_folder = "extracted_emails"
         folder_path = os.path.join(base_dir, latest_folder)
         json_files = [f for f in os.listdir(folder_path) if f.endswith('.json')]
         if not json_files:
