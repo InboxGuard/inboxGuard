@@ -23,8 +23,12 @@ if not EMAIL or not PASSWORD:
     sys.exit(1)
 
 # 2. Prepare output directory
-folder = datetime.now().strftime("%Y-%m-%d_%H")
+# folder = datetime.now().strftime("%Y-%m-%d_%H")
+# os.makedirs(folder, exist_ok=True)
+
+folder = "extracted_emails"
 os.makedirs(folder, exist_ok=True)
+  
 json_file = os.path.join(folder, "emails.json")
 
 # 3. Connect to POP3
