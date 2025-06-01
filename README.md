@@ -151,6 +151,11 @@ The script supports three different execution modes, each with specific use case
 - `-l, --log-dir DIR`: Specifies a custom directory for logging (default: `./logs`).
 - `-r, --reset`: Resets parameters to default values (requires admin privileges).
 
+### Server Management Options
+
+- `--start-server`: Start the FastAPI model service server independently (no pipeline execution).
+- `--stop-server`: Stop the FastAPI model service server and exit.
+
 ## 🔄 Execution Modes Explained
 
 ### Why Different Execution Modes?
@@ -249,6 +254,24 @@ Different execution modes provide flexibility for various deployment scenarios a
   ./inboxguard.sh -s -e user@gmail.com -p "your_app_password" -l /tmp/inboxguard_logs
   ```
 
+- **Start server independently** (useful for development or manual testing):
+
+  ```bash
+  ./inboxguard.sh --start-server
+  ```
+
+- **Stop server**:
+
+  ```bash
+  ./inboxguard.sh --stop-server
+  ```
+
+- **Run pipeline with auto server management**:
+
+  ```bash
+  ./inboxguard.sh -f -e user@gmail.com -p "your_app_password" --start-server
+  ```
+
 - **Reset parameters to default** (requires admin privileges):
   ```bash
   sudo ./inboxguard.sh -r
@@ -266,7 +289,236 @@ Different execution modes provide flexibility for various deployment scenarios a
 
 ---
 
+## 🖥️ Server Management
+
+InboxGuard includes comprehensive FastAPI server management capabilities for the model service component.
+
+### 🚀 Automatic Server Management
+
+When running the full pipeline, InboxGuard automatically:
+
+1. **Checks** if the FastAPI model service is running
+2. **Starts** the server if it's not running
+3. **Manages** the server lifecycle during pipeline execution
+4. **Stops** the server after pipeline completion (both success and failure)
+
+### 🛠️ Manual Server Management
+
+#### Start Server Independently
+
+Start the FastAPI model service without running the pipeline:
+
+```bash
+./inboxguard.sh --start-server
+```
+
+This is useful for:
+
+- Development and testing
+- Manual API testing
+- Keeping the server running for multiple pipeline executions
+
+#### Stop Server
+
+Stop the FastAPI model service:
+
+```bash
+./inboxguard.sh --stop-server
+```
+
+This command:
+
+- Gracefully terminates the server process
+- Cleans up any related processes
+- Provides confirmation of successful termination
+
+#### Check Server Status
+
+You can manually check if the server is running:
+
+```bash
+lsof -ti:8000  # Check if port 8000 is in use
+```
+
+### 🔄 Server Lifecycle Management
+
+#### During Pipeline Execution
+
+1. **Pre-execution**: Script checks if FastAPI server is running
+2. **Auto-start**: If not running, automatically starts the server
+3. **Pipeline execution**: Server processes model requests
+4. **Post-execution**: Server is automatically stopped for cleanup
+
+#### Server Configuration
+
+- **Host**: 0.0.0.0 (accessible from any network interface)
+- **Port**: 8000 (default FastAPI port)
+- **Background**: Server runs as a background process
+- **Logging**: Server output is redirected to prevent console clutter
+
+### 🛡️ Error Handling and Recovery
+
+#### Server Start Failures
+
+If the server fails to start:
+
+- Error code `103` is returned
+- Detailed error messages are logged
+- Script exits gracefully with appropriate error code
+
+#### Server Stop Operations
+
+Server stop operations are robust and include:
+
+- Graceful termination attempts (SIGTERM)
+- Force termination if graceful stop fails (SIGKILL)
+- Process cleanup and verification
+- Logging of all termination activities
+
+#### Cleanup on Interruption
+
+The script includes signal handlers that:
+
+- Catch Ctrl+C interruptions
+- Automatically stop the server
+- Log the interruption event
+- Ensure clean script termination
+
+---
+
+## ⚠️ Error Handling & Exit Codes
+
+InboxGuard implements structured error handling with specific exit codes for different types of failures.
+
+### 📋 Error Codes
+
+| Code  | Constant                    | Description                    | Example Scenario                   |
+| ----- | --------------------------- | ------------------------------ | ---------------------------------- |
+| `100` | `ERROR_INVALID_OPTION`      | Invalid command line option    | `./inboxguard.sh --invalid-option` |
+| `101` | `ERROR_MISSING_PARAMETER`   | Required parameter missing     | Missing email or password          |
+| `102` | `ERROR_PERMISSION_DENIED`   | Permission denied              | Using `--reset` without sudo       |
+| `103` | `ERROR_SERVER_START_FAILED` | FastAPI server failed to start | Server startup error               |
+| `104` | `ERROR_PIPELINE_FAILED`     | Pipeline execution failed      | Python pipeline error              |
+| `105` | `ERROR_LOG_SETUP_FAILED`    | Logging setup failed           | Log directory creation error       |
+
+### 🔍 Error Scenarios
+
+#### Invalid Options (Code 100)
+
+```bash
+./inboxguard.sh --invalid-option
+# Output:
+# [ERROR] Unknown option: --invalid-option
+# [ERROR] Error Code: 100
+# (Shows usage help)
+```
+
+#### Missing Parameters (Code 101)
+
+```bash
+./inboxguard.sh -f
+# Output:
+# [ERROR] Email and password are required!
+# [ERROR] Error Code: 101
+# (Shows usage help)
+```
+
+#### Permission Denied (Code 102)
+
+```bash
+./inboxguard.sh --reset  # Without sudo
+# Output:
+# [ERROR] Reset option requires admin privileges. Please run with sudo.
+# [ERROR] Error Code: 102
+```
+
+#### Server Start Failed (Code 103)
+
+```bash
+# If model-service/main.py is missing or server fails
+# [ERROR] Failed to start FastAPI server.
+# [ERROR] Error Code: 103
+```
+
+#### Pipeline Failed (Code 104)
+
+```bash
+# If the Python pipeline execution fails
+# [ERROR] ❌ Pipeline failed!
+# [ERROR] InboxGuard pipeline script failed with exit code 104
+```
+
+### 🛠️ Error Recovery
+
+#### Automatic Recovery
+
+The script includes automatic recovery mechanisms:
+
+1. **Server Management**: Automatically cleans up servers on any exit
+2. **Signal Handling**: Catches interruptions and performs cleanup
+3. **Logging**: All errors are logged with timestamps and user context
+4. **Help Display**: Shows usage information for invalid options
+
+#### Manual Recovery
+
+For persistent issues:
+
+1. **Check Dependencies**: Ensure Python and required packages are installed
+2. **Verify Permissions**: Check file and directory permissions
+3. **Review Logs**: Check `/var/log/inboxguard/history.log` for detailed error information
+4. **Manual Cleanup**: Stop any hanging processes manually if needed
+
+### 📊 Error Debugging
+
+#### View Error Logs
+
+```bash
+# View recent errors
+grep "ERROR" /var/log/inboxguard/history.log | tail -10
+
+# View errors for specific user
+grep ": $(whoami) : ERROR" /var/log/inboxguard/history.log
+
+# View specific error codes
+grep "Error Code" /var/log/inboxguard/history.log
+```
+
+#### Common Solutions
+
+| Error              | Solution                                                               |
+| ------------------ | ---------------------------------------------------------------------- |
+| Permission errors  | Run with `sudo` or fix file permissions                                |
+| Server won't start | Check if port 8000 is available, verify `model-service/main.py` exists |
+| Missing parameters | Provide required email and password parameters                         |
+| Invalid options    | Check available options with `--help`                                  |
+
+---
+
 ## ✅ Implementation Status
+
+### Step 4: Server Management & Error Handling - COMPLETED
+
+**Objective**: Implement automatic FastAPI server management and structured error handling with specific error codes.
+
+**Status**: ✅ **SUCCESSFULLY COMPLETED**
+
+#### Key Achievements:
+
+- ✅ Automatic FastAPI server lifecycle management
+- ✅ Manual server start/stop commands (`--start-server`, `--stop-server`)
+- ✅ Structured error handling with specific exit codes (100-105)
+- ✅ Robust process cleanup and signal handling
+- ✅ Comprehensive error logging and recovery mechanisms
+- ✅ Integration with existing pipeline and logging systems
+
+#### Technical Implementation:
+
+- Added `kill_fastapi_server()`, `check_fastapi_server()`, and `start_fastapi_server()` functions
+- Implemented structured error codes with descriptive constants
+- Enhanced command line argument parsing for server options
+- Added automatic server management during pipeline execution
+- Integrated server cleanup with exit handlers and signal traps
+- Updated help documentation and usage examples
 
 ### Step 3: Logging Implementation - COMPLETED
 
@@ -343,7 +595,7 @@ The logging system automatically:
 
 ### 📊 Sample Log Output
 
-#### Successful Execution
+#### Successful Execution with Server Management
 
 ```
 2025-06-01-14-30-45 : admin : INFOS : InboxGuard script started with user: admin
@@ -351,16 +603,31 @@ The logging system automatically:
 2025-06-01-14-30-45 : admin : INFOS : Email: test@gmail.com
 2025-06-01-14-30-45 : admin : INFOS : Number of emails: 10
 2025-06-01-14-30-45 : admin : INFOS : Execution mode: fork
+2025-06-01-14-30-46 : admin : INFOS : 🚀 Starting FastAPI server...
+2025-06-01-14-30-46 : admin : INFOS : FastAPI server started with PID: 12345
 2025-06-01-14-30-46 : admin : INFOS : 🚀 Starting InboxGuard Pipeline...
 2025-06-01-14-31-20 : admin : INFOS : 🎉 InboxGuard pipeline completed successfully!
+2025-06-01-14-31-20 : admin : INFOS : 🛑 Stopping FastAPI server on port 8000...
+2025-06-01-14-31-20 : admin : INFOS : FastAPI server process 12345 terminated
 2025-06-01-14-31-20 : admin : INFOS : InboxGuard script session ended
 ```
 
-#### Error Scenarios
+#### Server Management Operations
 
 ```
-2025-06-01-14-31-20 : admin : ERROR : Email and password are required!
-2025-06-01-14-31-20 : admin : ERROR : Script terminated with exit code 1
+2025-06-01-14-32-10 : admin : INFOS : InboxGuard script started with user: admin
+2025-06-01-14-32-10 : admin : INFOS : Script arguments: --start-server
+2025-06-01-14-32-10 : admin : INFOS : 🚀 Starting FastAPI server only (no pipeline execution)...
+2025-06-01-14-32-10 : admin : INFOS : FastAPI server started with PID: 12350
+2025-06-01-14-32-10 : admin : INFOS : InboxGuard script session ended
+```
+
+#### Error Scenarios with Error Codes
+
+```
+2025-06-01-14-31-20 : admin : ERROR : Unknown option: --invalid-option
+2025-06-01-14-31-20 : admin : ERROR : Error Code: 100
+2025-06-01-14-31-20 : admin : ERROR : Script terminated with exit code 100
 2025-06-01-14-31-20 : admin : INFOS : InboxGuard script session ended
 ```
 
@@ -475,12 +742,62 @@ sudo truncate -s 0 /var/log/inboxguard/history.log
 
 The logging system is fully integrated with the InboxGuard pipeline and logs:
 
+- **Server management** operations (start, stop, status checks)
 - **Email extraction** progress and results
 - **Model service** processing status
 - **Gmail actions** execution and results
 - **Script execution** modes and parameters
-- **Error conditions** and recovery attempts
+- **Error conditions** with specific error codes and recovery attempts
 
 All pipeline components now contribute to the centralized log, making debugging and monitoring much easier.
+
+---
+
+## 🚀 Quick Reference
+
+### Most Common Commands
+
+```bash
+# Run pipeline with email and password
+./inboxguard.sh -e user@gmail.com -p "your_app_password"
+
+# Start server independently for testing
+./inboxguard.sh --start-server
+
+# Stop server
+./inboxguard.sh --stop-server
+
+# Run with specific execution mode and more emails
+./inboxguard.sh -f -e user@gmail.com -p "password" -n 20
+
+# Get help
+./inboxguard.sh --help
+```
+
+### Important File Locations
+
+- **Main script**: `./inboxguard.sh`
+- **Python pipeline**: `./start.py`
+- **Model service**: `./model-service/main.py`
+- **Centralized logs**: `/var/log/inboxguard/history.log`
+- **Pipeline logs**: `./logs/pipeline.log`
+- **Environment file**: `./.env` (auto-generated)
+
+### Exit Codes Quick Reference
+
+- `0`: Success
+- `100`: Invalid option
+- `101`: Missing parameter
+- `102`: Permission denied
+- `103`: Server start failed
+- `104`: Pipeline failed
+- `105`: Log setup failed
+
+### Server Management
+
+- **Port**: 8000
+- **Check status**: `lsof -ti:8000`
+- **Auto-managed**: During pipeline execution
+- **Manual control**: `--start-server` / `--stop-server` options
 
 ---

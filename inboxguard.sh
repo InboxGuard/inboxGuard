@@ -2,9 +2,96 @@
 
 set -e  # Exit on any error
 
+# Error codes
+readonly ERROR_INVALID_OPTION=100
+readonly ERROR_MISSING_PARAMETER=101
+readonly ERROR_PERMISSION_DENIED=102
+readonly ERROR_SERVER_START_FAILED=103
+readonly ERROR_PIPELINE_FAILED=104
+readonly ERROR_LOG_SETUP_FAILED=105
+
+# Function to kill FastAPI server processes
+kill_fastapi_server() {
+    local server_pids
+    server_pids=$(lsof -ti:8000 2>/dev/null || true)
+    
+    if [[ -n "$server_pids" ]]; then
+        print_status "🛑 Stopping FastAPI server on port 8000..."
+        echo "$server_pids" | while read -r pid; do
+            if kill -0 "$pid" 2>/dev/null; then
+                print_status "Killing process $pid"
+                kill -TERM "$pid" 2>/dev/null || true
+                sleep 2
+                # Force kill if still running
+                if kill -0 "$pid" 2>/dev/null; then
+                    kill -KILL "$pid" 2>/dev/null || true
+                    print_status "Force killed process $pid"
+                fi
+                write_to_history_log "INFOS" "FastAPI server process $pid terminated"
+            fi
+        done
+        print_success "FastAPI server stopped"
+        return 0
+    else
+        print_status "No FastAPI server running on port 8000"
+        return 0
+    fi
+}
+
+# Function to check if FastAPI server is running
+check_fastapi_server() {
+    local server_pids
+    server_pids=$(lsof -ti:8000 2>/dev/null || true)
+    
+    if [[ -n "$server_pids" ]]; then
+        print_status "✅ FastAPI server is already running on port 8000 (PID: $server_pids)"
+        return 0
+    else
+        return 1
+    fi
+}
+
+# Function to start FastAPI server if needed
+start_fastapi_server() {
+    if ! check_fastapi_server; then
+        print_status "🚀 Starting FastAPI server..."
+        local model_service_dir="$SCRIPT_DIR/model-service"
+        
+        if [[ -f "$model_service_dir/main.py" ]]; then
+            # Start server in background
+            cd "$model_service_dir"
+            nohup python3 -m uvicorn main:app --host 0.0.0.0 --port 8000 > /dev/null 2>&1 &
+            local server_pid=$!
+            
+            # Wait a moment for server to start
+            sleep 3
+            
+            # Check if server started successfully
+            if check_fastapi_server; then
+                print_success "FastAPI server started successfully"
+                write_to_history_log "INFOS" "FastAPI server started with PID: $server_pid"
+                cd "$SCRIPT_DIR"
+                return 0
+            else
+                print_error "Failed to start FastAPI server"
+                write_to_history_log "ERROR" "Failed to start FastAPI server"
+                cd "$SCRIPT_DIR"
+                return 1
+            fi
+        else
+            print_error "FastAPI main.py not found in model-service directory"
+            return 1
+        fi
+    fi
+}
+
 # Error handling and cleanup
 cleanup() {
     local exit_code=$?
+    
+    # Always try to stop FastAPI server on cleanup
+    kill_fastapi_server
+    
     if [[ $exit_code -ne 0 ]]; then
         write_to_history_log "ERROR" "Script terminated with exit code $exit_code"
     fi
@@ -43,7 +130,8 @@ setup_logging() {
                 sudo chown root:admin "$HISTORY_LOG_DIR" 2>/dev/null || sudo chown root:wheel "$HISTORY_LOG_DIR" 2>/dev/null || true
             else
                 print_error "Cannot create log directory $HISTORY_LOG_DIR. Please run with sudo or create manually."
-                exit 1
+                print_error "Error Code: $ERROR_LOG_SETUP_FAILED"
+                exit $ERROR_LOG_SETUP_FAILED
             fi
         fi
     fi
@@ -134,6 +222,10 @@ show_usage() {
     echo "  -l, --log-dir DIR        Specify a directory for logging"
     echo "  -r, --reset              Reset parameters to default (requires admin privileges)"
     echo ""
+    echo "Server Options:"
+    echo "  --start-server           Auto-start FastAPI server if not running"
+    echo "  --stop-server            Stop FastAPI server and exit"
+    echo ""
     echo "Project-specific Options:"
     echo "  -e, --email EMAIL        Gmail address"
     echo "  -p, --password PASSWORD  Gmail app password (use quotes if it contains spaces)"
@@ -141,9 +233,10 @@ show_usage() {
     echo ""
     echo "Examples:"
     echo "  $0 -h"
-    echo "  $0 -f -e user@gmail.com -p \"your app password\""
+    echo "  $0 -f -e user@gmail.com -p \"your app password\" --start-server"
     echo "  $0 -t --email user@gmail.com --password \"your app password\" --num-emails 20"
     echo "  $0 -s -l /custom/log/dir -e user@gmail.com -p \"password\""
+    echo "  $0 --stop-server"
     echo ""
     echo "Note: Use Gmail App Password, not your regular password"
     echo "      If password contains spaces, wrap it in quotes"
@@ -156,6 +249,8 @@ PASSWORD=""
 EXECUTION_MODE=""
 CUSTOM_LOG_DIR=""
 RESET_PARAMS=false
+START_SERVER=false
+STOP_SERVER=false
 
 # Initialize logging system
 setup_logging
@@ -203,20 +298,59 @@ while [[ $# -gt 0 ]]; do
             NUM_EMAILS="$2"
             shift 2
             ;;
+        --start-server)
+            START_SERVER=true
+            shift
+            ;;
+        --stop-server)
+            STOP_SERVER=true
+            shift
+            ;;
         *)
             print_error "Unknown option: $1"
+            print_error "Error Code: $ERROR_INVALID_OPTION"
             show_usage
-            exit 1
+            exit $ERROR_INVALID_OPTION
             ;;
     esac
 done
+
+# Handle stop-server option
+if [[ "$STOP_SERVER" == true ]]; then
+    print_status "🛑 Stopping FastAPI server..."
+    kill_fastapi_server
+    if [[ $? -eq 0 ]]; then
+        print_success "Server operation completed successfully."
+    fi
+    exit 0
+fi
+
+# Handle start-server only option (without pipeline execution)
+if [[ "$START_SERVER" == true && -z "$EMAIL" && -z "$PASSWORD" ]]; then
+    print_status "🚀 Starting FastAPI server only (no pipeline execution)..."
+    
+    # Get script directory for server start
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    
+    start_fastapi_server
+    if [[ $? -eq 0 ]]; then
+        print_success "FastAPI server started successfully. Server will run in background."
+        print_status "Use './inboxguard.sh --stop-server' to stop the server when done."
+    else
+        print_error "Failed to start FastAPI server."
+        print_error "Error Code: $ERROR_SERVER_START_FAILED"
+        exit $ERROR_SERVER_START_FAILED
+    fi
+    exit 0
+fi
 
 # Handle reset option (requires admin privileges)
 if [[ "$RESET_PARAMS" == true ]]; then
     print_status "🔄 Resetting parameters to default..."
     if [[ $EUID -ne 0 ]]; then
         print_error "Reset option requires admin privileges. Please run with sudo."
-        exit 1
+        print_error "Error Code: $ERROR_PERMISSION_DENIED"
+        exit $ERROR_PERMISSION_DENIED
     fi
     # Reset to default values
     NUM_EMAILS=10
@@ -237,8 +371,9 @@ fi
 # Validate required arguments
 if [[ -z "$EMAIL" || -z "$PASSWORD" ]]; then
     print_error "Email and password are required!"
+    print_error "Error Code: $ERROR_MISSING_PARAMETER"
     show_usage
-    exit 1
+    exit $ERROR_MISSING_PARAMETER
 fi
 
 # Get script directory
@@ -284,6 +419,28 @@ print_status "Execution mode: $EXECUTION_MODE"
 log_message "INFOS" "Execution mode: $EXECUTION_MODE"
 print_status "Log directory: $LOG_DIR"
 log_message "INFOS" "Log directory: $LOG_DIR"
+
+# Handle server management before pipeline execution
+if [[ "$START_SERVER" == true ]]; then
+    print_status "🔧 Auto-start server option enabled..."
+    start_fastapi_server
+    if [[ $? -ne 0 ]]; then
+        print_error "Failed to start FastAPI server. Exiting."
+        exit 1
+    fi
+else
+    # Check if server is running, start if needed for pipeline execution
+    if ! check_fastapi_server; then
+        print_warning "FastAPI server is not running. Starting server for pipeline execution..."
+        start_fastapi_server
+        if [[ $? -ne 0 ]]; then
+            print_error "Failed to start FastAPI server. Pipeline requires the server to be running."
+            print_error "You can start the server manually or use the --start-server option."
+            print_error "Error Code: $ERROR_SERVER_START_FAILED"
+            exit $ERROR_SERVER_START_FAILED
+        fi
+    fi
+fi
 
 # Create or update .env file
 print_status "📝 Creating environment file..."
@@ -348,7 +505,8 @@ case "$EXECUTION_MODE" in
         ;;
     *)
         print_error "Invalid execution mode: $EXECUTION_MODE"
-        exit 1
+        print_error "Error Code: $ERROR_INVALID_OPTION"
+        exit $ERROR_INVALID_OPTION
         ;;
 esac
 
@@ -357,12 +515,19 @@ if [[ $PIPELINE_EXIT_CODE -eq 0 ]]; then
     log_message "SUCCESS" "🎉 InboxGuard pipeline completed successfully!"
     print_status "Check the logs in each service directory for detailed information."
     
+    # Stop FastAPI server after successful completion
+    kill_fastapi_server
+    
     # Log completion details only on success
     write_to_history_log "INFOS" "InboxGuard pipeline script completed successfully"
     write_to_history_log "INFOS" "All outputs logged to $HISTORY_LOG_FILE"
 else
     print_error "❌ Pipeline failed!"
     log_message "ERROR" "❌ Pipeline failed!"
+    
+    # Stop FastAPI server after failure too
+    kill_fastapi_server
+    
     write_to_history_log "ERROR" "InboxGuard pipeline script failed with exit code $PIPELINE_EXIT_CODE"
-    exit 1
+    exit $ERROR_PIPELINE_FAILED
 fi
