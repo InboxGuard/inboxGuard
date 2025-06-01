@@ -95,6 +95,8 @@ chmod +x inboxguard.sh
 ./inboxguard.sh -e email@gmail.com -p "your_app_password"
 ```
 
+---
+
 ## 🛠️ How It Works
 
 ### 1. Email Extraction
@@ -796,5 +798,3 @@ All pipeline components now contribute to the centralized log, making debugging 
 - **Check status**: `lsof -ti:8000`
 - **Auto-managed**: During pipeline execution
 - **Manual control**: `--start-server` / `--stop-server` options
-
----
