@@ -2,6 +2,19 @@
 
 set -e  # Exit on any error
 
+# Error handling and cleanup
+cleanup() {
+    local exit_code=$?
+    if [[ $exit_code -ne 0 ]]; then
+        write_to_history_log "ERROR" "Script terminated with exit code $exit_code"
+    fi
+    write_to_history_log "INFOS" "InboxGuard script session ended"
+}
+
+# Set up signal handlers
+trap cleanup EXIT
+trap 'write_to_history_log "ERROR" "Script interrupted by user"; exit 130' INT TERM
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -9,21 +22,104 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Function to print colored output
+# Global logging configuration
+HISTORY_LOG_DIR="/var/log/inboxguard"
+HISTORY_LOG_FILE="$HISTORY_LOG_DIR/history.log"
+CURRENT_USER=$(whoami)
+
+# Function to setup logging infrastructure
+setup_logging() {
+    # Create log directory if it doesn't exist
+    if [[ ! -d "$HISTORY_LOG_DIR" ]]; then
+        if [[ $EUID -eq 0 ]]; then
+            mkdir -p "$HISTORY_LOG_DIR"
+            chmod 755 "$HISTORY_LOG_DIR"
+        else
+            # If not root, try to create with sudo
+            if command -v sudo >/dev/null 2>&1; then
+                print_status "Creating log directory $HISTORY_LOG_DIR (requires sudo)..."
+                sudo mkdir -p "$HISTORY_LOG_DIR"
+                sudo chmod 755 "$HISTORY_LOG_DIR"
+                sudo chown root:admin "$HISTORY_LOG_DIR" 2>/dev/null || sudo chown root:wheel "$HISTORY_LOG_DIR" 2>/dev/null || true
+            else
+                print_error "Cannot create log directory $HISTORY_LOG_DIR. Please run with sudo or create manually."
+                exit 1
+            fi
+        fi
+    fi
+    
+    # Create log file if it doesn't exist
+    if [[ ! -f "$HISTORY_LOG_FILE" ]]; then
+        if [[ $EUID -eq 0 ]]; then
+            touch "$HISTORY_LOG_FILE"
+            chmod 644 "$HISTORY_LOG_FILE"
+        else
+            # If not root, try to create with sudo
+            if command -v sudo >/dev/null 2>&1; then
+                sudo touch "$HISTORY_LOG_FILE"
+                sudo chmod 644 "$HISTORY_LOG_FILE"
+                sudo chown root:admin "$HISTORY_LOG_FILE" 2>/dev/null || sudo chown root:wheel "$HISTORY_LOG_FILE" 2>/dev/null || true
+            else
+                print_error "Cannot create log file $HISTORY_LOG_FILE. Please run with sudo or create manually."
+                exit 1
+            fi
+        fi
+    fi
+    
+    # Test if we can write to the log file
+    if [[ ! -w "$HISTORY_LOG_FILE" ]]; then
+        if command -v sudo >/dev/null 2>&1; then
+            # Make the file writable for the current user's group
+            sudo chmod g+w "$HISTORY_LOG_FILE" 2>/dev/null || true
+        fi
+    fi
+}
+
+# Enhanced logging function with proper format
+write_to_history_log() {
+    local level="$1"
+    shift
+    local message="$@"
+    local timestamp=$(date '+%Y-%m-%d-%H-%M-%S')
+    local log_entry="$timestamp : $CURRENT_USER : $level : $message"
+    
+    # Write to history log
+    if [[ -w "$HISTORY_LOG_FILE" ]]; then
+        echo "$log_entry" >> "$HISTORY_LOG_FILE"
+    else
+        # Try with sudo if direct write fails
+        if command -v sudo >/dev/null 2>&1; then
+            echo "$log_entry" | sudo tee -a "$HISTORY_LOG_FILE" >/dev/null
+        else
+            # Fallback to stderr if all else fails
+            echo "WARNING: Cannot write to $HISTORY_LOG_FILE: $log_entry" >&2
+        fi
+    fi
+}
+
+# Function to print colored output with logging
 print_status() {
-    echo -e "${BLUE}[INFO]${NC} $1"
+    local message="$1"
+    echo -e "${BLUE}[INFO]${NC} $message"
+    write_to_history_log "INFOS" "$message"
 }
 
 print_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
+    local message="$1"
+    echo -e "${GREEN}[SUCCESS]${NC} $message"
+    write_to_history_log "INFOS" "$message"
 }
 
 print_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
+    local message="$1"
+    echo -e "${RED}[ERROR]${NC} $message" >&2
+    write_to_history_log "ERROR" "$message"
 }
 
 print_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
+    local message="$1"
+    echo -e "${YELLOW}[WARNING]${NC} $message"
+    write_to_history_log "INFOS" "$message"
 }
 
 # Function to show usage
@@ -60,6 +156,13 @@ PASSWORD=""
 EXECUTION_MODE=""
 CUSTOM_LOG_DIR=""
 RESET_PARAMS=false
+
+# Initialize logging system
+setup_logging
+
+# Log script initialization
+write_to_history_log "INFOS" "InboxGuard script started with user: $CURRENT_USER"
+write_to_history_log "INFOS" "Script arguments: $*"
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -129,7 +232,6 @@ fi
 if [[ -z "$EXECUTION_MODE" ]]; then
     EXECUTION_MODE="subshell"
     print_warning "No execution mode specified, defaulting to subshell mode"
-    log_message "WARNING" "No execution mode specified, defaulting to subshell mode"
 fi
 
 # Validate required arguments
@@ -157,13 +259,19 @@ mkdir -p "$LOG_DIR"
 # Update the pipeline log file path to be in the logs directory
 PIPELINE_LOG_FILE="$LOG_DIR/pipeline.log"
 
+# Enhanced log_message function that also writes to history log
 log_message() {
     local level="$1"
     shift
     local message="$@"
     local timestamp
     timestamp="$(date +"%Y-%m-%d %H:%M:%S")"
+    
+    # Write to pipeline log
     echo -e "$timestamp [$level] $message" >> "$PIPELINE_LOG_FILE"
+    
+    # Also write to history log with proper format
+    write_to_history_log "$level" "$message"
 }
 
 print_status "🚀 Starting InboxGuard Pipeline..."
@@ -191,26 +299,34 @@ log_message "SUCCESS" "Environment file created at $ENV_FILE"
 execute_with_fork() {
     print_status "🍴 Executing pipeline using fork..."
     log_message "INFOS" "🍴 Executing pipeline using fork..."
-    python3 start.py &
-    wait $!
-    return $?
+    python3 start.py
+    local exit_code=$?
+    if [[ $exit_code -ne 0 ]]; then
+        write_to_history_log "ERROR" "Fork execution failed with exit code $exit_code"
+    fi
+    return $exit_code
 }
 
 execute_with_threads() {
     print_status "🧵 Executing pipeline using threads..."
     log_message "INFOS" "🧵 Executing pipeline using threads..."
-    # Note: Python handles threading internally, but we can use background execution
-    python3 start.py &
-    PYTHON_PID=$!
-    wait $PYTHON_PID
-    return $?
+    python3 start.py
+    local exit_code=$?
+    if [[ $exit_code -ne 0 ]]; then
+        write_to_history_log "ERROR" "Thread execution failed with exit code $exit_code"
+    fi
+    return $exit_code
 }
 
 execute_with_subshell() {
     print_status "🐚 Executing pipeline in subshell..."
     log_message "INFOS" "🐚 Executing pipeline in subshell..."
     (python3 start.py)
-    return $?
+    local exit_code=$?
+    if [[ $exit_code -ne 0 ]]; then
+        write_to_history_log "ERROR" "Subshell execution failed with exit code $exit_code"
+    fi
+    return $exit_code
 }
 
 # Run the Python pipeline with selected execution mode
@@ -240,38 +356,13 @@ if [[ $PIPELINE_EXIT_CODE -eq 0 ]]; then
     print_success "🎉 InboxGuard pipeline completed successfully!"
     log_message "SUCCESS" "🎉 InboxGuard pipeline completed successfully!"
     print_status "Check the logs in each service directory for detailed information."
+    
+    # Log completion details only on success
+    write_to_history_log "INFOS" "InboxGuard pipeline script completed successfully"
+    write_to_history_log "INFOS" "All outputs logged to $HISTORY_LOG_FILE"
 else
     print_error "❌ Pipeline failed!"
     log_message "ERROR" "❌ Pipeline failed!"
+    write_to_history_log "ERROR" "InboxGuard pipeline script failed with exit code $PIPELINE_EXIT_CODE"
     exit 1
-fi
-
-# Log email extraction step
-log_message "INFOS" "📧 Step 1: Extracting emails..."
-
-# Log model service step
-log_message "INFOS" "🤖 Step 2: Processing with AI model..."
-
-# Log Gmail actions step
-log_message "INFOS" "🏷️ Step 4: Creating Gmail labels..."
-
-# Log email actions step
-log_message "INFOS" "⚡ Step 5: Applying email actions..."
-
-# Ensure Gmail processor logs are saved in the correct directory
-GMAIL_PROCESSOR_LOG_DIR="$SCRIPT_DIR/logs"
-if [[ ! -d "$GMAIL_PROCESSOR_LOG_DIR" ]]; then
-    mkdir -p "$GMAIL_PROCESSOR_LOG_DIR"
-fi
-
-# Update the log file path for Gmail processor
-GMAIL_PROCESSOR_LOG_FILE="$GMAIL_PROCESSOR_LOG_DIR/gmail_processor_$(date '+%Y%m%d_%H%M%S').log"
-log_message "INFOS" "Log file saved to: $GMAIL_PROCESSOR_LOG_FILE"
-
-# Redirect all terminal output to the pipeline log file
-exec > >(tee -a "$PIPELINE_LOG_FILE") 2>&1
-
-# Ensure the pipeline log file is created in the logs directory
-if [[ ! -f "$PIPELINE_LOG_FILE" ]]; then
-    touch "$PIPELINE_LOG_FILE"
 fi
