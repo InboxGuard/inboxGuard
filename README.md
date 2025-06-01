@@ -131,30 +131,27 @@ Classification results are stored in the `model-service/responses/` directory. E
 
 The `inboxguard.sh` script supports the following options:
 
-### Core Options
+- **Core Options:**
 
-- `-e, --email EMAIL`: Specifies the Gmail address to use for the pipeline.
-- `-p, --password PASSWORD`: Specifies the Gmail app password (not the regular Gmail password).
-- `-n, --num-emails NUM`: Specifies the number of emails to process (default is 10).
-- `-h, --help`: Displays the help message with usage instructions.
+  - `-e, --email EMAIL`: Specifies the Gmail address to use for the pipeline.
+  - `-p, --password PASSWORD`: Specifies the Gmail app password (not the regular Gmail password).
+  - `-n, --num-emails NUM`: Specifies the number of emails to process (default is 10).
+  - `-h, --help`: Displays the help message with usage instructions.
 
-### Execution Mode Options
+- **Execution Mode Options:** (choose one, default: subshell)
 
-The script supports three different execution modes, each with specific use cases:
+  - `-f, --fork`: Executes tasks using child processes (via `fork`).
+  - `-t, --threads`: Executes tasks using threads for parallel processing.
+  - `-s, --subshell`: Executes tasks in a subshell (isolated environment). **[Default]**
 
-- `-f, --fork`: Executes tasks using child processes (via `fork`).
-- `-t, --threads`: Executes tasks using threads for parallel processing.
-- `-s, --subshell`: Executes tasks in a subshell (isolated environment). **[Default]**
+- **Utility Options:**
 
-### Utility Options
+  - `-l, --log-dir DIR`: Specifies a custom directory for logging (default: `./logs`).
+  - `-r, --reset`: Resets parameters to default values (requires admin privileges).
 
-- `-l, --log-dir DIR`: Specifies a custom directory for logging (default: `./logs`).
-- `-r, --reset`: Resets parameters to default values (requires admin privileges).
-
-### Server Management Options
-
-- `--start-server`: Start the FastAPI model service server independently (no pipeline execution).
-- `--stop-server`: Stop the FastAPI model service server and exit.
+- **Server Management Options:**
+  - `--start-server`: Start the FastAPI model service server independently (no pipeline execution).
+  - `--stop-server`: Stop the FastAPI model service server and exit.
 
 ## 🔄 Execution Modes Explained
 
