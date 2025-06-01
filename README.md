@@ -131,43 +131,135 @@ Classification results are stored in the `model-service/responses/` directory. E
 
 The `inboxguard.sh` script supports the following options:
 
+### Core Options
+
 - `-e, --email EMAIL`: Specifies the Gmail address to use for the pipeline.
 - `-p, --password PASSWORD`: Specifies the Gmail app password (not the regular Gmail password).
 - `-n, --num-emails NUM`: Specifies the number of emails to process (default is 10).
-- `-f, --fork`: Executes tasks using child processes (via `fork`).
-- `-t, --thread`: Executes tasks using threads for parallel processing.
-- `-s, --subshell`: Executes tasks in a subshell (isolated environment).
-- `-l, --log DIR`: Specifies a custom directory for logging (default: `/var/log/inboxguard`).
-- `-r, --restore`: Resets parameters to default values (requires admin privileges).
 - `-h, --help`: Displays the help message with usage instructions.
+
+### Execution Mode Options
+
+The script supports three different execution modes, each with specific use cases:
+
+- `-f, --fork`: Executes tasks using child processes (via `fork`).
+- `-t, --threads`: Executes tasks using threads for parallel processing.
+- `-s, --subshell`: Executes tasks in a subshell (isolated environment). **[Default]**
+
+### Utility Options
+
+- `-l, --log-dir DIR`: Specifies a custom directory for logging (default: `./logs`).
+- `-r, --reset`: Resets parameters to default values (requires admin privileges).
+
+## 🔄 Execution Modes Explained
+
+### Why Different Execution Modes?
+
+Different execution modes provide flexibility for various deployment scenarios and system requirements:
+
+### 🍴 Fork Mode (`-f`)
+
+**What it does**: Creates a separate child process to run the pipeline.
+
+**When to use**:
+
+- When you need process isolation for security
+- For production environments where process crashes shouldn't affect the parent
+- When running multiple pipelines simultaneously
+
+**Advantages**:
+
+- Complete process isolation
+- Memory is not shared between processes
+- If the pipeline crashes, it won't affect the main script
+
+**Disadvantages**:
+
+- Higher memory usage (separate process)
+- Slightly slower startup time
+- Inter-process communication overhead
+
+### 🧵 Threads Mode (`-t`)
+
+**What it does**: Executes the pipeline in a background thread while maintaining shared memory space.
+
+**When to use**:
+
+- For better resource utilization
+- When you need shared state between the main script and pipeline
+- For faster execution with shared memory access
+
+**Advantages**:
+
+- Lower memory footprint (shared memory)
+- Faster inter-thread communication
+- Better for concurrent operations
+
+**Disadvantages**:
+
+- Less isolation (threads share memory)
+- Potential for memory leaks affecting the entire process
+- Threading complexity in Python (GIL limitations)
+
+### 🐚 Subshell Mode (`-s`) - **Default**
+
+**What it does**: Runs the pipeline in an isolated shell environment.
+
+**When to use**:
+
+- For development and testing (recommended default)
+- When you need environment variable isolation
+- For simple, straightforward execution
+
+**Advantages**:
+
+- Environment isolation (variables, working directory)
+- Simple and reliable execution model
+- Clean separation of execution context
+- Default choice for most use cases
+
+**Disadvantages**:
+
+- Less control over the execution process
+- Limited inter-process communication options
 
 ### Examples
 
-- Run the pipeline with a Gmail account:
+- **Basic usage** (uses default subshell mode):
 
   ```bash
   ./inboxguard.sh -e user@gmail.com -p "your_app_password"
   ```
 
-- Process 20 emails:
+- **Process 20 emails with fork mode**:
 
   ```bash
-  ./inboxguard.sh -e user@gmail.com -p "your_app_password" -n 20
+  ./inboxguard.sh -f -e user@gmail.com -p "your_app_password" -n 20
   ```
 
-- Use fork mode:
+- **Use threads mode for better performance**:
 
   ```bash
-  ./inboxguard.sh -e user@gmail.com -p "your_app_password" -f
+  ./inboxguard.sh -t -e user@gmail.com -p "your_app_password"
   ```
 
-- Specify a custom log directory:
+- **Explicit subshell mode with custom log directory**:
 
   ```bash
-  ./inboxguard.sh -e user@gmail.com -p "your_app_password" -l /tmp/inboxguard_logs
+  ./inboxguard.sh -s -e user@gmail.com -p "your_app_password" -l /tmp/inboxguard_logs
   ```
 
-- Reset parameters to default (requires admin privileges):
+- **Reset parameters to default** (requires admin privileges):
   ```bash
   sudo ./inboxguard.sh -r
   ```
+
+## 🎯 Choosing the Right Execution Mode
+
+| Scenario                 | Recommended Mode | Reason                              |
+| ------------------------ | ---------------- | ----------------------------------- |
+| **Development/Testing**  | `-s` (subshell)  | Simple, isolated, reliable          |
+| **Production/Security**  | `-f` (fork)      | Process isolation, crash protection |
+| **Performance Critical** | `-t` (threads)   | Shared memory, faster execution     |
+| **Multiple Pipelines**   | `-f` (fork)      | Independent processes               |
+| **Resource Constrained** | `-t` (threads)   | Lower memory usage                  |
