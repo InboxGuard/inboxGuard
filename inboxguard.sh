@@ -34,11 +34,18 @@ show_usage() {
     echo "  -e, --email EMAIL        Gmail address"
     echo "  -p, --password PASSWORD  Gmail app password (use quotes if it contains spaces)"
     echo "  -n, --num-emails NUM     Number of emails to process (default: 10)"
+    echo "  -f, --fork               Execute tasks using fork (child processes)"
+    echo "  -t, --thread             Execute tasks using threads"
+    echo "  -s, --subshell           Execute tasks in a subshell"
+    echo "  -l, --log DIR            Specify a directory for logging"
+    echo "  -r, --restore            Reset parameters to default (requires admin privileges)"
     echo "  -h, --help               Show this help message"
     echo ""
     echo "Examples:"
     echo "  $0 -e user@gmail.com -p \"your app password\""
     echo "  $0 --email user@gmail.com --password \"your app password\" --num-emails 20"
+    echo "  $0 --fork"
+    echo "  $0 --log /path/to/logs"
     echo ""
     echo "Note: Use Gmail App Password, not your regular password"
     echo "      If password contains spaces, wrap it in quotes"
@@ -48,6 +55,9 @@ show_usage() {
 NUM_EMAILS=10
 EMAIL=""
 PASSWORD=""
+LOG_DIR="/var/log/inboxguard"
+RESTORE=false
+EXEC_MODE="default"
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -63,6 +73,26 @@ while [[ $# -gt 0 ]]; do
         -n|--num-emails)
             NUM_EMAILS="$2"
             shift 2
+            ;;
+        -f|--fork)
+            EXEC_MODE="fork"
+            shift
+            ;;
+        -t|--thread)
+            EXEC_MODE="thread"
+            shift
+            ;;
+        -s|--subshell)
+            EXEC_MODE="subshell"
+            shift
+            ;;
+        -l|--log)
+            LOG_DIR="$2"
+            shift 2
+            ;;
+        -r|--restore)
+            RESTORE=true
+            shift
             ;;
         -h|--help)
             show_usage
@@ -82,6 +112,34 @@ if [[ -z "$EMAIL" || -z "$PASSWORD" ]]; then
     show_usage
     exit 1
 fi
+
+# Handle restore option
+if [[ "$RESTORE" == true ]]; then
+    if [[ $(id -u) -ne 0 ]]; then
+        print_error "Restore option requires admin privileges!"
+        exit 1
+    fi
+    print_status "Restoring default parameters..."
+    # Add restore logic here
+    exit 0
+fi
+
+# Handle logging directory
+if [[ ! -d "$LOG_DIR" ]]; then
+    mkdir -p "$LOG_DIR"
+fi
+LOG_FILE="$LOG_DIR/history.log"
+
+# Add logging function
+log_message() {
+    local level="$1"
+    local message="$2"
+    local timestamp=$(date '+%Y-%m-%d-%H-%M-%S')
+    local username=$(whoami)
+    echo "$timestamp : $username : $level : $message" | tee -a "$LOG_FILE"
+}
+
+log_message "INFOS" "Starting script with execution mode: $EXEC_MODE"
 
 # Get script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -104,6 +162,23 @@ print_success "Environment file created at $ENV_FILE"
 # Run the Python pipeline
 print_status "🐍 Starting Python pipeline..."
 cd "$SCRIPT_DIR"
+
+# Check if the model service is running
+MODEL_SERVICE_PORT=8000
+if ! lsof -i :$MODEL_SERVICE_PORT > /dev/null; then
+    print_status "🤖 Model service is not running. Starting it now..."
+    (cd "$SCRIPT_DIR/model-service" && python3 main.py &) > /dev/null 2>&1
+    sleep 5  # Wait for the service to start
+
+    # Verify if the service started successfully
+    if ! lsof -i :$MODEL_SERVICE_PORT > /dev/null; then
+        print_error "Failed to start the model service. Please check the logs."
+        exit 1
+    fi
+    print_success "Model service started successfully."
+else
+    print_status "🤖 Model service is already running."
+fi
 
 if python3 start.py; then
     print_success "🎉 InboxGuard pipeline completed successfully!"
