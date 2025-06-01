@@ -263,3 +263,224 @@ Different execution modes provide flexibility for various deployment scenarios a
 | **Performance Critical** | `-t` (threads)   | Shared memory, faster execution     |
 | **Multiple Pipelines**   | `-f` (fork)      | Independent processes               |
 | **Resource Constrained** | `-t` (threads)   | Lower memory usage                  |
+
+---
+
+## ✅ Implementation Status
+
+### Step 3: Logging Implementation - COMPLETED
+
+**Objective**: Add a logging mechanism to redirect standard output and errors to `/var/log/inboxguard/history.log`.
+
+**Status**: ✅ **SUCCESSFULLY COMPLETED**
+
+#### Key Achievements:
+
+- ✅ Centralized logging to `/var/log/inboxguard/history.log`
+- ✅ Standardized format: `yyyy-mm-dd-hh-mm-ss : username : LEVEL : message`
+- ✅ Automatic file creation and permission handling
+- ✅ Multi-user support with username tracking
+- ✅ Comprehensive error tracking and session management
+- ✅ Signal handling for script interruptions
+- ✅ Integration with existing pipeline components
+
+#### Technical Implementation:
+
+- Enhanced all print functions to log to centralized location
+- Added `setup_logging()` and `write_to_history_log()` functions
+- Implemented permission handling for both root and non-root users
+- Added signal handlers and cleanup functions
+- Maintains backward compatibility with existing logging
+
+---
+
+## 📋 Logging System
+
+InboxGuard features a comprehensive logging system that tracks all pipeline activities and redirects output to a centralized location for easy monitoring and troubleshooting.
+
+### 🎯 Logging Overview
+
+The logging system provides:
+
+- **Centralized logging** to `/var/log/inboxguard/history.log`
+- **Standardized format** for all log entries
+- **Multi-user support** with username tracking
+- **Session management** with start/end logging
+- **Error tracking** with exit codes
+- **Automatic setup** with permission handling
+
+### 📝 Log Format
+
+All log entries follow this standardized format:
+
+```
+yyyy-mm-dd-hh-mm-ss : username : LEVEL : message
+```
+
+**Components:**
+
+- `yyyy-mm-dd-hh-mm-ss`: Timestamp (e.g., 2025-06-01-14-30-45)
+- `username`: System username running the script (from `whoami`)
+- `LEVEL`: Either `INFOS` for informational messages or `ERROR` for error messages
+- `message`: The actual log message content
+
+### 📂 Log Location
+
+- **Directory**: `/var/log/inboxguard/`
+- **File**: `/var/log/inboxguard/history.log`
+- **Permissions**:
+  - Directory: 755 (drwxr-xr-x)
+  - File: 644 (rw-rw-r--)
+
+### 🚀 Automatic Setup
+
+The logging system automatically:
+
+1. **Creates log directory** if it doesn't exist
+2. **Handles permissions** using sudo when necessary
+3. **Sets up file permissions** for multi-user access
+4. **Initializes logging** on script startup
+
+### 📊 Sample Log Output
+
+#### Successful Execution
+
+```
+2025-06-01-14-30-45 : admin : INFOS : InboxGuard script started with user: admin
+2025-06-01-14-30-45 : admin : INFOS : Script arguments: -e test@gmail.com -p password -f
+2025-06-01-14-30-45 : admin : INFOS : Email: test@gmail.com
+2025-06-01-14-30-45 : admin : INFOS : Number of emails: 10
+2025-06-01-14-30-45 : admin : INFOS : Execution mode: fork
+2025-06-01-14-30-46 : admin : INFOS : 🚀 Starting InboxGuard Pipeline...
+2025-06-01-14-31-20 : admin : INFOS : 🎉 InboxGuard pipeline completed successfully!
+2025-06-01-14-31-20 : admin : INFOS : InboxGuard script session ended
+```
+
+#### Error Scenarios
+
+```
+2025-06-01-14-31-20 : admin : ERROR : Email and password are required!
+2025-06-01-14-31-20 : admin : ERROR : Script terminated with exit code 1
+2025-06-01-14-31-20 : admin : INFOS : InboxGuard script session ended
+```
+
+#### Script Interruption
+
+```
+2025-06-01-14-32-10 : admin : ERROR : Script interrupted by user
+2025-06-01-14-32-10 : admin : INFOS : InboxGuard script session ended
+```
+
+### 🔧 Logging Features
+
+#### Core Features
+
+- **Session Tracking**: Logs script start, arguments, and completion
+- **Error Handling**: Comprehensive error logging with exit codes
+- **Signal Handling**: Captures interruptions (Ctrl+C) and logs them
+- **Permission Management**: Handles both root and non-root execution
+- **Dual Output**: Maintains both console output and centralized logging
+
+#### Advanced Features
+
+- **Multi-user Support**: Tracks which user ran the script
+- **ANSI Color Removal**: Clean log entries without terminal color codes
+- **Pipeline Integration**: Works alongside existing pipeline logging
+- **Backward Compatibility**: Doesn't interfere with existing log files
+
+### 📋 Viewing Logs
+
+#### View Recent Entries
+
+```bash
+tail -10 /var/log/inboxguard/history.log
+```
+
+#### View Logs for Specific User
+
+```bash
+grep ": username :" /var/log/inboxguard/history.log
+```
+
+#### View Error Entries Only
+
+```bash
+grep "ERROR" /var/log/inboxguard/history.log
+```
+
+#### Follow Logs in Real-time
+
+```bash
+tail -f /var/log/inboxguard/history.log
+```
+
+### 🛠️ Troubleshooting Logging
+
+#### Permission Issues
+
+If you encounter permission errors:
+
+1. Run the script with `sudo` for initial setup:
+   ```bash
+   sudo ./inboxguard.sh -e your@gmail.com -p "password"
+   ```
+2. Or manually create the directory:
+   ```bash
+   sudo mkdir -p /var/log/inboxguard
+   sudo chmod 755 /var/log/inboxguard
+   ```
+
+#### Log File Not Created
+
+If the log file is not created:
+
+1. Check if the directory exists and is writable
+2. Verify sudo access is available
+3. Check disk space in `/var/log/`
+
+#### Checking Log File Status
+
+```bash
+# Check if log directory exists
+ls -la /var/log/inboxguard/
+
+# Check log file permissions
+ls -la /var/log/inboxguard/history.log
+
+# Check disk space
+df -h /var/log
+```
+
+### 🔄 Log Management
+
+#### Log File Size
+
+Monitor log file size periodically:
+
+```bash
+du -h /var/log/inboxguard/history.log
+```
+
+#### Manual Log Rotation (if needed)
+
+```bash
+# Backup current log
+sudo cp /var/log/inboxguard/history.log /var/log/inboxguard/history.log.backup
+
+# Clear current log
+sudo truncate -s 0 /var/log/inboxguard/history.log
+```
+
+### 🎯 Integration with Pipeline
+
+The logging system is fully integrated with the InboxGuard pipeline and logs:
+
+- **Email extraction** progress and results
+- **Model service** processing status
+- **Gmail actions** execution and results
+- **Script execution** modes and parameters
+- **Error conditions** and recovery attempts
+
+All pipeline components now contribute to the centralized log, making debugging and monitoring much easier.
+
+---
