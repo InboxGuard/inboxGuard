@@ -126,3 +126,48 @@ Classification results are stored in the `model-service/responses/` directory. E
 - Ensure IMAP is enabled in your Gmail account.
 - Use a Gmail app password for authentication.
 - This pipeline is for educational and personal use only. Keep your credentials secure.
+
+## 🛠️ Script Options
+
+The `inboxguard.sh` script supports the following options:
+
+- `-e, --email EMAIL`: Specifies the Gmail address to use for the pipeline.
+- `-p, --password PASSWORD`: Specifies the Gmail app password (not the regular Gmail password).
+- `-n, --num-emails NUM`: Specifies the number of emails to process (default is 10).
+- `-f, --fork`: Executes tasks using child processes (via `fork`).
+- `-t, --thread`: Executes tasks using threads for parallel processing.
+- `-s, --subshell`: Executes tasks in a subshell (isolated environment).
+- `-l, --log DIR`: Specifies a custom directory for logging (default: `/var/log/inboxguard`).
+- `-r, --restore`: Resets parameters to default values (requires admin privileges).
+- `-h, --help`: Displays the help message with usage instructions.
+
+### Examples
+
+- Run the pipeline with a Gmail account:
+
+  ```bash
+  ./inboxguard.sh -e user@gmail.com -p "your_app_password"
+  ```
+
+- Process 20 emails:
+
+  ```bash
+  ./inboxguard.sh -e user@gmail.com -p "your_app_password" -n 20
+  ```
+
+- Use fork mode:
+
+  ```bash
+  ./inboxguard.sh -e user@gmail.com -p "your_app_password" -f
+  ```
+
+- Specify a custom log directory:
+
+  ```bash
+  ./inboxguard.sh -e user@gmail.com -p "your_app_password" -l /tmp/inboxguard_logs
+  ```
+
+- Reset parameters to default (requires admin privileges):
+  ```bash
+  sudo ./inboxguard.sh -r
+  ```
