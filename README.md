@@ -149,7 +149,7 @@ The `inboxguard.sh` script supports the following options:
 - **Utility Options:**
 
   - `-l, --log-dir DIR`: Specifies a custom directory for logging (default: `./logs`).
-  - `-r, --reset`: Resets parameters to default values (requires admin privileges).
+  - `-r, --reset`: Resets project to default state: clears .env, logs, extracted emails, and responses (requires admin privileges).
 
 - **Server Management Options:**
   - `--start-server`: Start the FastAPI model service server independently (no pipeline execution).
@@ -285,6 +285,79 @@ Different execution modes provide flexibility for various deployment scenarios a
 | **Performance Critical** | `-t` (threads)   | Shared memory, faster execution     |
 | **Multiple Pipelines**   | `-f` (fork)      | Independent processes               |
 | **Resource Constrained** | `-t` (threads)   | Lower memory usage                  |
+
+---
+
+## 🔄 Project Reset Functionality
+
+InboxGuard includes a comprehensive reset feature that allows you to restore the project to its initial clean state.
+
+### 🧹 What Reset Does
+
+The `sudo ./inboxguard.sh -r` command performs a complete project cleanup:
+
+#### Files and Directories Cleaned:
+
+- **`.env` file**: Removes stored Gmail credentials and configuration
+- **`actions-service/logs/`**: Clears all action service log files
+- **`email-service/extracted_emails/`**: Removes all extracted email data
+- **`model-service/responses/`**: Clears all model classification results
+- **`logs/pipeline.log`**: Clears the main pipeline log (keeps file structure)
+
+#### Additional Actions:
+
+- **FastAPI Server**: Stops any running model service servers
+- **Parameters**: Resets all script variables to default values
+- **Logging**: Records the complete reset operation in system logs
+
+### 🛡️ Security Requirements
+
+The reset operation requires admin privileges because it:
+
+- Performs system-wide cleanup operations
+- Ensures only authorized users can reset project state
+- Maintains security for multi-user environments
+
+### 📋 Reset Output Example
+
+```bash
+$ sudo ./inboxguard.sh -r
+[INFO] 🔄 Resetting InboxGuard project to default state...
+[INFO] 🛑 Stopping any running FastAPI servers...
+[INFO] No FastAPI server running on port 8000
+[INFO] 🗑️  Cleaning up project data files...
+[INFO] ✅ Removed .env file
+[INFO] ✅ Cleaned actions-service/logs directory
+[INFO] ✅ Cleaned email-service/extracted_emails directory
+[INFO] ✅ Cleaned model-service/responses directory
+[INFO] ✅ Cleared pipeline.log
+[SUCCESS] 🎉 InboxGuard project reset completed successfully!
+[INFO] 📋 Reset summary:
+[INFO]    • Parameters reset to default values
+[INFO]    • .env file removed
+[INFO]    • actions-service/logs cleaned
+[INFO]    • email-service/extracted_emails cleaned
+[INFO]    • model-service/responses cleaned
+[INFO]    • pipeline.log cleared
+[INFO]    • FastAPI server stopped
+```
+
+### 🎯 When to Use Reset
+
+Use the reset functionality when you need to:
+
+- **Start fresh**: Begin with a clean project state
+- **Change credentials**: Switch to different Gmail account safely
+- **Clear test data**: Remove development/testing artifacts
+- **Troubleshoot**: Eliminate potential data conflicts
+- **Security cleanup**: Ensure no sensitive data remains in the project
+
+### ⚠️ Important Notes
+
+- **Requires sudo**: Always run with admin privileges
+- **Data loss**: All extracted emails and classification results will be permanently deleted
+- **Credentials**: You'll need to re-enter Gmail credentials after reset
+- **Irreversible**: There's no undo function - make backups if needed
 
 ---
 
@@ -768,6 +841,9 @@ All pipeline components now contribute to the centralized log, making debugging 
 
 # Run with specific execution mode and more emails
 ./inboxguard.sh -f -e user@gmail.com -p "password" -n 20
+
+# Reset project to clean state (removes all data)
+sudo ./inboxguard.sh -r
 
 # Get help
 ./inboxguard.sh --help
