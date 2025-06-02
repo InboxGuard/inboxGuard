@@ -220,7 +220,7 @@ show_usage() {
     echo "  -t, --threads            Execute tasks using threads"
     echo "  -s, --subshell           Execute tasks in a subshell"
     echo "  -l, --log-dir DIR        Specify a directory for logging"
-    echo "  -r, --reset              Reset parameters to default (requires admin privileges)"
+    echo "  -r, --reset              Reset project to default state: clear .env, logs, extracted emails, and responses (requires admin privileges)"
     echo ""
     echo "Server Options:"
     echo "  --start-server           Auto-start FastAPI server if not running"
@@ -346,19 +346,70 @@ fi
 
 # Handle reset option (requires admin privileges)
 if [[ "$RESET_PARAMS" == true ]]; then
-    print_status "🔄 Resetting parameters to default..."
+    print_status "🔄 Resetting InboxGuard project to default state..."
     if [[ $EUID -ne 0 ]]; then
         print_error "Reset option requires admin privileges. Please run with sudo."
         print_error "Error Code: $ERROR_PERMISSION_DENIED"
         exit $ERROR_PERMISSION_DENIED
     fi
-    # Reset to default values
+    
+    # Get script directory
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    
+    # Stop any running FastAPI server
+    print_status "🛑 Stopping any running FastAPI servers..."
+    kill_fastapi_server
+    
+    # Reset script variables to default values
     NUM_EMAILS=10
     EMAIL=""
     PASSWORD=""
     EXECUTION_MODE=""
     CUSTOM_LOG_DIR=""
-    print_success "Parameters reset to default values."
+    
+    # Clean up project files and directories
+    print_status "🗑️  Cleaning up project data files..."
+    
+    # Remove .env file
+    if [[ -f "$SCRIPT_DIR/.env" ]]; then
+        rm -f "$SCRIPT_DIR/.env"
+        print_status "✅ Removed .env file"
+    fi
+    
+    # Clean actions-service logs
+    if [[ -d "$SCRIPT_DIR/actions-service/logs" ]]; then
+        rm -rf "$SCRIPT_DIR/actions-service/logs"/*
+        print_status "✅ Cleaned actions-service/logs directory"
+    fi
+    
+    # Clean email-service extracted emails
+    if [[ -d "$SCRIPT_DIR/email-service/extracted_emails" ]]; then
+        rm -rf "$SCRIPT_DIR/email-service/extracted_emails"/*
+        print_status "✅ Cleaned email-service/extracted_emails directory"
+    fi
+    
+    # Clean model-service responses
+    if [[ -d "$SCRIPT_DIR/model-service/responses" ]]; then
+        rm -rf "$SCRIPT_DIR/model-service/responses"/*
+        print_status "✅ Cleaned model-service/responses directory"
+    fi
+    
+    # Clean main logs directory (optional - keep pipeline.log structure but clear content)
+    if [[ -f "$SCRIPT_DIR/logs/pipeline.log" ]]; then
+        > "$SCRIPT_DIR/logs/pipeline.log"
+        print_status "✅ Cleared pipeline.log"
+    fi
+    
+    print_success "🎉 InboxGuard project reset completed successfully!"
+    print_status "📋 Reset summary:"
+    print_status "   • Parameters reset to default values"
+    print_status "   • .env file removed"
+    print_status "   • actions-service/logs cleaned"
+    print_status "   • email-service/extracted_emails cleaned"
+    print_status "   • model-service/responses cleaned"
+    print_status "   • pipeline.log cleared"
+    print_status "   • FastAPI server stopped"
+    
     exit 0
 fi
 
